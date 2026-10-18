@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { getCoverImage, HEALTH_STATUSES } from "@/lib/trees";
 import {
@@ -9,8 +12,9 @@ import {
 } from "@/components/icons";
 
 export default function TreeCard({ tree, onDelete, onDuplicate }) {
+  const [imgFailed, setImgFailed] = useState(false);
   const accent = tree.color || "#22c55e";
-  const cover = getCoverImage(tree);
+  const cover = !imgFailed && getCoverImage(tree);
   const photoCount = tree.images?.length || 0;
   const healthInfo = HEALTH_STATUSES.find((h) => h.value === tree.health);
 
@@ -24,6 +28,7 @@ export default function TreeCard({ tree, onDelete, onDuplicate }) {
           <img
             src={cover}
             alt={tree.name}
+            onError={() => setImgFailed(true)}
             className="w-full h-full object-cover sm:group-hover:scale-105 transition-transform duration-300"
           />
         ) : (

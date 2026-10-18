@@ -7,11 +7,13 @@ import {
   deleteTree,
   duplicateTree,
 } from "@/lib/trees";
-import { exportAsCsv, exportAsJson } from "@/lib/export";
+import { seedDemoDataIfNeeded } from "@/lib/seedTrees";
+import { exportAsCsv } from "@/lib/export";
 import TreeCard from "@/components/TreeCard";
 import TreeTypeFilter from "@/components/TreeTypeFilter";
 import Toast from "@/components/Toast";
 import {
+  ChevronDownIcon,
   DownloadIcon,
   LeafIcon,
   MapIcon,
@@ -23,16 +25,28 @@ import {
 
 const UNDO_DELAY = 5000;
 
+const DATE_RANGE_DAYS = {
+  all: null,
+  "7d": 7,
+  "1m": 30,
+  "2m": 60,
+  "3m": 90,
+  "6m": 180,
+  "1y": 365,
+};
+
 export default function Home() {
   const [trees, setTrees] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [typeFilter, setTypeFilter] = useState(null);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [dateRange, setDateRange] = useState("all");
   const [pendingDelete, setPendingDelete] = useState(null);
   const pendingTimeoutRef = useRef(null);
 
   useEffect(() => {
+    seedDemoDataIfNeeded();
     setTrees(getTrees());
     setLoaded(true);
     return () => {
@@ -116,6 +130,12 @@ export default function Home() {
       );
     }
 
+    const days = DATE_RANGE_DAYS[dateRange];
+    if (days) {
+      const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+      result = result.filter((t) => new Date(t.created_at).getTime() >= cutoff);
+    }
+
     result = [...result];
     if (sortBy === "oldest") {
       result.reverse();
@@ -125,13 +145,15 @@ export default function Home() {
     // "newest" is already the default order from getTrees()
 
     return result;
-  }, [visibleTrees, typeFilter, search, sortBy]);
+  }, [visibleTrees, typeFilter, search, sortBy, dateRange]);
 
-  const filtersActive = typeFilter !== null || search.trim() !== "";
+  const filtersActive =
+    typeFilter !== null || search.trim() !== "" || dateRange !== "all";
 
   function clearFilters() {
     setTypeFilter(null);
     setSearch("");
+    setDateRange("all");
   }
 
   return (
@@ -227,29 +249,52 @@ export default function Home() {
             <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
               Sort
             </label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="focus-ring min-h-[40px] border border-slate-300 dark:border-slate-600 rounded-xl px-3 text-sm bg-white dark:bg-slate-800 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-shadow duration-150"
-            >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="name">Name A-Z</option>
-            </select>
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="focus-ring appearance-none min-h-[40px] border border-slate-300 dark:border-slate-600 rounded-xl pl-3 pr-8 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-shadow duration-150"
+              >
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="name">Name A-Z</option>
+              </select>
+              <ChevronDownIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
 
-          {availableTypes.length > 1 && (
-            <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
-                Tree Type
-              </label>
-              <TreeTypeFilter
-                types={availableTypes}
-                value={typeFilter}
-                onChange={setTypeFilter}
-              />
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+              Tree Type
+            </label>
+            <TreeTypeFilter
+              types={availableTypes}
+              value={typeFilter}
+              onChange={setTypeFilter}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+              Date Added
+            </label>
+            <div className="relative">
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="focus-ring appearance-none min-h-[40px] border border-slate-300 dark:border-slate-600 rounded-xl pl-3 pr-8 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-shadow duration-150"
+              >
+                <option value="all">All time</option>
+                <option value="7d">Last 7 days</option>
+                <option value="1m">Last 1 month</option>
+                <option value="2m">Last 2 months</option>
+                <option value="3m">Last 3 months</option>
+                <option value="6m">Last 6 months</option>
+                <option value="1y">Last 1 year</option>
+              </select>
+              <ChevronDownIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
-          )}
+          </div>
 
           {filtersActive && (
             <button
@@ -265,19 +310,11 @@ export default function Home() {
           <div className="flex items-center gap-1.5 ml-auto">
             <button
               type="button"
-              onClick={() => exportAsCsv(visibleTrees)}
+              onClick={() => exportAsCsv(filteredTrees)}
               className="focus-ring flex items-center gap-1.5 min-h-[40px] px-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-colors duration-150"
             >
               <DownloadIcon className="w-3.5 h-3.5" />
               CSV
-            </button>
-            <button
-              type="button"
-              onClick={() => exportAsJson(visibleTrees)}
-              className="focus-ring flex items-center gap-1.5 min-h-[40px] px-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-colors duration-150"
-            >
-              <DownloadIcon className="w-3.5 h-3.5" />
-              JSON
             </button>
           </div>
         </div>
@@ -304,7 +341,7 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center text-center py-16 sm:py-24 px-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-white/50 dark:bg-slate-800/30">
           <p className="text-slate-800 dark:text-slate-200 font-semibold">No trees match these filters</p>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 mb-5">
-            Try a different search term or tree type.
+            Try a different search term, tree type, or date range.
           </p>
           <button
             type="button"

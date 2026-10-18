@@ -53,17 +53,22 @@ function dotIcon(color) {
 export default function TreeMap({ trees }) {
   const located = trees.filter((t) => t.latitude && t.longitude);
 
-  const center = located.length
-    ? [
-        located.reduce((sum, t) => sum + t.latitude, 0) / located.length,
-        located.reduce((sum, t) => sum + t.longitude, 0) / located.length,
-      ]
-    : [20.5937, 78.9629]; // fallback: center of India
+  // Fit the view to however the located trees are actually spread out,
+  // rather than a fixed zoom on their geometric average — with trees across
+  // several distant cities, that average can land far from any of them.
+  const viewProps = located.length
+    ? {
+        bounds: located.map((t) => [t.latitude, t.longitude]),
+        boundsOptions: { padding: [40, 40], maxZoom: 13 },
+      }
+    : {
+        center: [20.5937, 78.9629], // fallback: center of India
+        zoom: 5,
+      };
 
   return (
     <MapContainer
-      center={center}
-      zoom={located.length ? 12 : 5}
+      {...viewProps}
       minZoom={5}
       maxBounds={INDIA_BOUNDS}
       maxBoundsViscosity={1.0}

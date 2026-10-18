@@ -35,8 +35,10 @@ export default function TreeForm({
     return [];
   });
   const [saving, setSaving] = useState(false);
+  const [processingImages, setProcessingImages] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
@@ -47,8 +49,16 @@ export default function TreeForm({
       f.type.startsWith("image/")
     );
     if (!files.length) return;
-    const dataUrls = await Promise.all(files.map(fileToDataUrl));
-    setImages((prev) => [...prev, ...dataUrls]);
+    setProcessingImages(true);
+    setSaveError("");
+    try {
+      const dataUrls = await Promise.all(files.map(fileToDataUrl));
+      setImages((prev) => [...prev, ...dataUrls]);
+    } catch (err) {
+      setSaveError(err.message || "Could not process that photo.");
+    } finally {
+      setProcessingImages(false);
+    }
   }
 
   function handleImageChange(e) {
@@ -69,19 +79,26 @@ export default function TreeForm({
   async function handleSubmit(e) {
     e.preventDefault();
     setAttempted(true);
-    if (!isValid) return;
+    if (!isValid || processingImages) return;
     setSaving(true);
+    setSaveError("");
 
-    await onSubmit({
-      name: name.trim(),
-      color,
-      description,
-      location,
-      latitude,
-      longitude,
-      images,
-      health,
-    });
+    try {
+      await onSubmit({
+        name: name.trim(),
+        color,
+        description,
+        location,
+        latitude,
+        longitude,
+        images,
+        health,
+      });
+    } catch (err) {
+      setSaveError(err.message || "Something went wrong saving this tree.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -267,10 +284,17 @@ export default function TreeForm({
                 {dragOver ? "Drop to upload" : "Gallery"}
               </button>
             </div>
-            <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-              Add as many photos as you like. The first one is used as the
-              cover photo.
-            </p>
+            {processingImages ? (
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400">
+                <SpinnerIcon className="w-3.5 h-3.5" />
+                Processing photo...
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+                Add as many photos as you like. The first one is used as the
+                cover photo.
+              </p>
+            )}
 
             <input
               ref={cameraInputRef}
@@ -290,19 +314,25 @@ export default function TreeForm({
             />
           </div>
 
+          {saveError && (
+            <p className="-mt-2 text-sm text-red-600 dark:text-red-400">
+              {saveError}
+            </p>
+          )}
+
           <button
             type="submit"
-            disabled={saving || (attempted && !isValid)}
+            disabled={saving || processingImages || (attempted && !isValid)}
             className={`focus-ring flex items-center justify-center gap-2 w-full min-h-[48px] rounded-xl font-semibold shadow-sm transition-all duration-200 ${
-              saving
+              saving || processingImages
                 ? "bg-green-600/70 text-white cursor-wait"
                 : attempted && !isValid
                   ? "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none"
                   : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 active:from-green-800 active:to-emerald-800 text-white shadow-green-600/25 hover:shadow-lg hover:shadow-green-600/30 hover:-translate-y-0.5"
             }`}
           >
-            {saving && <SpinnerIcon className="w-4 h-4" />}
-            {saving ? "Saving..." : submitLabel}
+            {(saving || processingImages) && <SpinnerIcon className="w-4 h-4" />}
+            {saving ? "Saving..." : processingImages ? "Processing photo..." : submitLabel}
           </button>
         </form>
       </div>

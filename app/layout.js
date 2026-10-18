@@ -61,7 +61,10 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]"
+      >
         <Navbar />
         <div className="flex-1 flex flex-col">{children}</div>
         <Script
