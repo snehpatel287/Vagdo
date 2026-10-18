@@ -2,12 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  getTrees,
-  deleteTree,
-  duplicateTree,
-} from "@/lib/trees";
-import { seedDemoDataIfNeeded, resetAllData } from "@/lib/seedTrees";
+import { getTrees, deleteTree } from "@/lib/trees";
+import { seedDemoDataIfNeeded } from "@/lib/seedTrees";
 import { exportAsCsv } from "@/lib/export";
 import TreeCard from "@/components/TreeCard";
 import TreeTypeFilter from "@/components/TreeTypeFilter";
@@ -91,17 +87,6 @@ export default function Home() {
     setPendingDelete(null);
   }
 
-  function handleDuplicate(id) {
-    duplicateTree(id);
-    setTrees(getTrees());
-  }
-
-  function handleResetData() {
-    const confirmed = window.confirm(
-      "This will permanently delete every tree you've added and reload the demo data. This can't be undone. Continue?"
-    );
-    if (confirmed) resetAllData();
-  }
 
   const visibleTrees = useMemo(
     () => trees.filter((t) => t.id !== pendingDelete?.id),
@@ -365,21 +350,8 @@ export default function Home() {
               key={tree.id}
               tree={tree}
               onDelete={handleDelete}
-              onDuplicate={handleDuplicate}
             />
           ))}
-        </div>
-      )}
-
-      {loaded && (
-        <div className="mt-10 pt-6 border-t border-slate-200 dark:border-slate-700 flex justify-center">
-          <button
-            type="button"
-            onClick={handleResetData}
-            className="focus-ring text-xs text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-150"
-          >
-            Reset all data
-          </button>
         </div>
       )}
 

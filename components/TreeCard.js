@@ -2,24 +2,45 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { getCoverImage, HEALTH_STATUSES } from "@/lib/trees";
 import {
-  DocumentDuplicateIcon,
   MapPinIcon,
   PencilIcon,
   TreeIcon,
   TrashIcon,
 } from "@/components/icons";
 
-export default function TreeCard({ tree, onDelete, onDuplicate }) {
+export default function TreeCard({ tree, onDelete }) {
+  const router = useRouter();
   const [imgFailed, setImgFailed] = useState(false);
   const accent = tree.color || "#22c55e";
   const cover = !imgFailed && getCoverImage(tree);
   const photoCount = tree.images?.length || 0;
   const healthInfo = HEALTH_STATUSES.find((h) => h.value === tree.health);
 
+  function goToDetail() {
+    router.push(`/tree/${tree.id}`);
+  }
+
+  function stop(e) {
+    e.stopPropagation();
+  }
+
   return (
-    <div className="group h-full flex flex-row sm:flex-col bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:border-slate-300 dark:hover:border-slate-600 sm:hover:-translate-y-1 transition-all duration-300">
+    <div
+      onClick={goToDetail}
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          goToDetail();
+        }
+      }}
+      aria-label={`View ${tree.name} details`}
+      className="group h-full flex flex-row sm:flex-col bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:border-slate-300 dark:hover:border-slate-600 sm:hover:-translate-y-1 transition-all duration-300 cursor-pointer focus-ring"
+    >
       <div className="hidden sm:block h-1 w-full shrink-0" style={{ background: accent }} />
 
       <div className="w-24 sm:w-full aspect-square shrink-0 bg-slate-100 dark:bg-slate-700 overflow-hidden relative">
@@ -89,6 +110,7 @@ export default function TreeCard({ tree, onDelete, onDuplicate }) {
               href={`https://www.google.com/maps?q=${tree.latitude},${tree.longitude}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={stop}
               className="focus-ring rounded flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors duration-150 min-h-[28px] sm:min-h-[32px] shrink-0"
             >
               <MapPinIcon className="w-3.5 h-3.5 hidden sm:block" />
@@ -99,22 +121,19 @@ export default function TreeCard({ tree, onDelete, onDuplicate }) {
             <span />
           )}
           <div className="flex items-center gap-0.5">
-            <button
-              onClick={() => onDuplicate(tree.id)}
-              aria-label={`Duplicate ${tree.name}`}
-              className="focus-ring rounded flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-slate-400 dark:text-slate-500 hover:text-purple-700 hover:bg-purple-50 transition-colors duration-150"
-            >
-              <DocumentDuplicateIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </button>
             <Link
               href={`/edit/${tree.id}`}
+              onClick={stop}
               aria-label={`Edit ${tree.name}`}
               className="focus-ring rounded flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-slate-400 dark:text-slate-500 hover:text-green-700 hover:bg-green-50 transition-colors duration-150"
             >
               <PencilIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
             <button
-              onClick={() => onDelete(tree.id)}
+              onClick={(e) => {
+                stop(e);
+                onDelete(tree.id);
+              }}
               aria-label={`Delete ${tree.name}`}
               className="focus-ring rounded flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors duration-150"
             >

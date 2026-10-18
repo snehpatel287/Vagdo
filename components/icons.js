@@ -152,15 +152,6 @@ export function SpinnerIcon({ className = "w-4 h-4", ...props }) {
   );
 }
 
-export function DocumentDuplicateIcon(props) {
-  return (
-    <Icon {...props}>
-      <path d="M15.75 17.25v2.25a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9A2.25 2.25 0 014.5 8.25h2.25" />
-      <path d="M8.25 4.5h9A2.25 2.25 0 0119.5 6.75v9a2.25 2.25 0 01-2.25 2.25h-9A2.25 2.25 0 016 15.75v-9A2.25 2.25 0 018.25 4.5z" />
-    </Icon>
-  );
-}
-
 export function DownloadIcon(props) {
   return (
     <Icon {...props}>

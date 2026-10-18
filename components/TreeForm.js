@@ -76,6 +76,16 @@ export default function TreeForm({
     setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function setCoverImage(index) {
+    setImages((prev) => {
+      if (index === 0) return prev;
+      const next = [...prev];
+      const [chosen] = next.splice(index, 1);
+      next.unshift(chosen);
+      return next;
+    });
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setAttempted(true);
@@ -227,7 +237,12 @@ export default function TreeForm({
             {images.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mb-2.5">
                 {images.map((src, i) => (
-                  <div key={i} className="relative aspect-square">
+                  <div
+                    key={i}
+                    className={`relative aspect-square rounded-lg ${
+                      i === 0 ? "ring-2 ring-green-500" : ""
+                    }`}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={src}
@@ -242,10 +257,18 @@ export default function TreeForm({
                     >
                       <XMarkIcon className="w-3.5 h-3.5" />
                     </button>
-                    {i === 0 && (
-                      <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
+                    {i === 0 ? (
+                      <span className="absolute bottom-1 left-1 bg-green-600 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
                         Cover
                       </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setCoverImage(i)}
+                        className="focus-ring absolute bottom-1 left-1 bg-black/60 hover:bg-black/75 text-white text-[10px] font-medium px-1.5 py-0.5 rounded transition-colors duration-150"
+                      >
+                        Set as cover
+                      </button>
                     )}
                   </div>
                 ))}
