@@ -3,22 +3,28 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getCoverImage, HEALTH_STATUSES } from "@/lib/trees";
+import { getCoverImage } from "@/lib/trees";
+import { useReferenceData } from "@/lib/reference/ReferenceDataProvider";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   LeafIcon,
   MapPinIcon,
   PencilIcon,
   TreeIcon,
   TrashIcon,
+  UserIcon,
 } from "@/components/icons";
 
 export default function TreeCard({ tree, onDelete }) {
   const router = useRouter();
+  const { healthStatuses } = useReferenceData();
+  const { user } = useAuth();
   const [imgFailed, setImgFailed] = useState(false);
   const accent = tree.color || "#22c55e";
   const cover = !imgFailed && getCoverImage(tree);
   const photoCount = tree.images?.length || 0;
-  const healthInfo = HEALTH_STATUSES.find((h) => h.value === tree.health);
+  const healthInfo = healthStatuses.find((h) => h.value === tree.health);
+  const showOwner = tree.owner_name && tree.user_id !== user?.id;
 
   function goToDetail() {
     router.push(`/tree/${tree.id}`);
@@ -117,6 +123,13 @@ export default function TreeCard({ tree, onDelete }) {
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
             <MapPinIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
             <span className="truncate">{tree.location}</span>
+          </p>
+        )}
+
+        {showOwner && (
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
+            <UserIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+            <span className="truncate">{tree.owner_name}</span>
           </p>
         )}
 

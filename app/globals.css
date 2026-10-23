@@ -118,6 +118,28 @@ body {
   padding: 8px 10px !important;
 }
 
+/* Strip the browser's native input[type=color] chrome (its own padding,
+   border, and swatch icon) so it renders as a plain, perfectly round color
+   fill inside whatever container wraps it — without this reset the native
+   swatch pokes out from under custom styling instead of being clipped. */
+input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+  border: none;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 9999px;
+}
+input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 9999px;
+}
+
 /* Marker cluster bubbles, restyled from the plugin's default flat green/
    yellow/orange rings to match the app's brand green + soft shadow. */
 .marker-cluster div {

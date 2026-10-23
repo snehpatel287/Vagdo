@@ -3,14 +3,18 @@
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getTree, deleteTree, HEALTH_STATUSES } from "@/lib/trees";
+import { getTree, deleteTree } from "@/lib/trees";
+import { useReferenceData } from "@/lib/reference/ReferenceDataProvider";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import {
+  CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MapPinIcon,
   PencilIcon,
   TrashIcon,
   TreeIcon,
+  UserIcon,
 } from "@/components/icons";
 
 export default function TreeDetailPage() {
@@ -24,14 +28,27 @@ export default function TreeDetailPage() {
 function TreeDetail() {
   const { id } = useParams();
   const router = useRouter();
+  const { healthStatuses } = useReferenceData();
+  const { user } = useAuth();
   const [tree, setTree] = useState(undefined); // undefined = loading, null = not found
   const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
-    setTree(getTree(id));
+    getTree(id).then(setTree).catch(() => setTree(null));
   }, [id]);
 
-  if (tree === undefined) return null;
+  if (tree === undefined) {
+    return (
+      <main className="flex-1 max-w-lg w-full mx-auto px-4 sm:px-6 py-10">
+        <div className="animate-pulse flex flex-col gap-3">
+          <div className="h-5 w-24 bg-slate-200 dark:bg-slate-700 rounded" />
+          <div className="aspect-square bg-slate-200 dark:bg-slate-700 rounded-2xl" />
+          <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-700 rounded" />
+          <div className="h-4 w-1/3 bg-slate-200 dark:bg-slate-700 rounded" />
+        </div>
+      </main>
+    );
+  }
 
   if (tree === null) {
     return (
@@ -44,7 +61,7 @@ function TreeDetail() {
         </p>
         <Link
           href="/"
-          className="focus-ring rounded text-green-700 hover:text-green-800 hover:underline text-sm font-medium"
+          className="focus-ring rounded text-green-700 dark:text-green-400 hover:underline text-sm font-medium"
         >
           ← Back to list
         </Link>
@@ -58,7 +75,15 @@ function TreeDetail() {
       ? [tree.image_url]
       : [];
   const accent = tree.color || "#22c55e";
-  const healthInfo = HEALTH_STATUSES.find((h) => h.value === tree.health);
+  const healthInfo = healthStatuses.find((h) => h.value === tree.health);
+  const showOwner = tree.owner_name && tree.user_id !== user?.id;
+  const addedOn = tree.created_at
+    ? new Date(tree.created_at).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
 
   function prevImage() {
     setActiveImage((i) => (i === 0 ? images.length - 1 : i - 1));
@@ -68,10 +93,10 @@ function TreeDetail() {
     setActiveImage((i) => (i === images.length - 1 ? 0 : i + 1));
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     const confirmed = window.confirm(`Delete ${tree.name}? This can't be undone.`);
     if (!confirmed) return;
-    deleteTree(tree.id);
+    await deleteTree(tree.id);
     router.push("/");
   }
 
@@ -81,10 +106,11 @@ function TreeDetail() {
         href="/"
         className="focus-ring rounded inline-flex items-center gap-1 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 mb-4 transition-colors duration-150"
       >
-        ← Back to list
+        <ChevronLeftIcon className="w-4 h-4" />
+        Back to list
       </Link>
 
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm shadow-slate-200/60 dark:shadow-none overflow-hidden">
         <div className="aspect-square bg-slate-100 dark:bg-slate-700 relative">
           {images.length > 0 ? (
             <>
@@ -119,10 +145,10 @@ function TreeDetail() {
                         type="button"
                         onClick={() => setActiveImage(i)}
                         aria-label={`Show photo ${i + 1}`}
-                        className={`w-1.5 h-1.5 rounded-full transition-all duration-150 ${
+                        className={`h-1.5 rounded-full transition-all duration-150 ${
                           i === activeImage
                             ? "bg-white w-4"
-                            : "bg-white/60 hover:bg-white/80"
+                            : "bg-white/60 hover:bg-white/80 w-1.5"
                         }`}
                       />
                     ))}
@@ -134,16 +160,21 @@ function TreeDetail() {
             <div
               className="w-full h-full flex items-center justify-center"
               style={{
-                background: `radial-gradient(circle at 30% 25%, ${accent}3d, transparent 60%), linear-gradient(135deg, ${accent}2a, ${accent}0a)`,
+                background: `linear-gradient(160deg, ${accent}1f, ${accent}08 55%, transparent)`,
               }}
             >
-              <TreeIcon className="w-16 h-16" style={{ color: accent }} />
+              <span
+                className="flex items-center justify-center w-24 h-24 rounded-full ring-1"
+                style={{ backgroundColor: `${accent}1a`, "--tw-ring-color": `${accent}30` }}
+              >
+                <TreeIcon className="w-11 h-11" style={{ color: accent }} />
+              </span>
             </div>
           )}
         </div>
 
         {images.length > 1 && (
-          <div className="flex gap-2 p-3 overflow-x-auto">
+          <div className="flex gap-2 p-3 overflow-x-auto border-b border-slate-100 dark:border-slate-700/60">
             {images.map((src, i) => (
               <button
                 key={i}
@@ -163,7 +194,7 @@ function TreeDetail() {
           </div>
         )}
 
-        <div className="p-5 sm:p-6 flex flex-col gap-3">
+        <div className="p-5 sm:p-6 flex flex-col gap-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
               <span
@@ -178,7 +209,7 @@ function TreeDetail() {
               <Link
                 href={`/edit/${tree.id}`}
                 aria-label={`Edit ${tree.name}`}
-                className="focus-ring rounded flex items-center justify-center w-9 h-9 text-slate-400 dark:text-slate-500 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-500/10 transition-colors duration-150"
+                className="focus-ring rounded-lg flex items-center justify-center w-9 h-9 text-slate-400 dark:text-slate-500 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10 transition-colors duration-150"
               >
                 <PencilIcon className="w-4 h-4" />
               </Link>
@@ -186,51 +217,71 @@ function TreeDetail() {
                 type="button"
                 onClick={handleDelete}
                 aria-label={`Delete ${tree.name}`}
-                className="focus-ring rounded flex items-center justify-center w-9 h-9 text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors duration-150"
+                className="focus-ring rounded-lg flex items-center justify-center w-9 h-9 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors duration-150"
               >
                 <TrashIcon className="w-4 h-4" />
               </button>
             </div>
           </div>
 
-          {healthInfo && (
-            <span
-              className="inline-flex items-center gap-1.5 self-start text-xs font-medium px-2.5 py-1 rounded-full text-white"
-              style={{ backgroundColor: healthInfo.color }}
-            >
-              {healthInfo.label}
-            </span>
-          )}
-
-          {tree.location && (
-            <p className="text-sm text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-              <MapPinIcon className="w-4 h-4 shrink-0" />
-              {tree.location}
-            </p>
+          {(healthInfo || tree.location_type) && (
+            <div className="flex flex-wrap gap-2">
+              {healthInfo && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full text-white"
+                  style={{ backgroundColor: healthInfo.color }}
+                >
+                  {healthInfo.label}
+                </span>
+              )}
+              {tree.location_type && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                  {tree.location_type}
+                </span>
+              )}
+            </div>
           )}
 
           {tree.description && (
-            <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">
+            <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
               {tree.description}
             </p>
           )}
 
-          {tree.locationType && (
-            <span className="inline-flex items-center gap-1 self-start text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400">
-              {tree.locationType}
-            </span>
-          )}
+          <div className="flex flex-col gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/60">
+            {tree.location && (
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 min-w-0">
+                  <MapPinIcon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{tree.location}</span>
+                </span>
+                {tree.latitude && tree.longitude && (
+                  <a
+                    href={`https://www.google.com/maps?q=${tree.latitude},${tree.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="focus-ring rounded shrink-0 text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                  >
+                    View on map
+                  </a>
+                )}
+              </div>
+            )}
 
-          {tree.latitude && tree.longitude && (
-            <a
-              href={`https://www.google.com/maps?q=${tree.latitude},${tree.longitude}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline font-medium self-start"
-            >
-              View on map
-            </a>
-          )}
+            {showOwner && (
+              <p className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                <UserIcon className="w-4 h-4 shrink-0" />
+                Added by {tree.owner_name}
+              </p>
+            )}
+
+            {addedOn && (
+              <p className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                <CalendarIcon className="w-4 h-4 shrink-0" />
+                Added {addedOn}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </main>

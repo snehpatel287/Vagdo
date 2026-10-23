@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { fileToDataUrl, HEALTH_STATUSES, LOCATION_TYPES } from "@/lib/trees";
-import { COLOR_PALETTE } from "@/lib/treeTypes";
+import { uploadTreeImage } from "@/lib/trees";
+import { useReferenceData } from "@/lib/reference/ReferenceDataProvider";
 import TreeTypeSelect from "@/components/TreeTypeSelect";
 import LocationInput from "@/components/LocationInput";
 import {
@@ -25,7 +25,9 @@ export default function TreeForm({
   initial = null,
   submitLabel = "Save Tree",
   onSubmit,
+  embedded = false,
 }) {
+  const { healthStatuses, locationTypes } = useReferenceData();
   const [name, setName] = useState(initial?.name || "");
   const [color, setColor] = useState(initial?.color || "");
   const [description, setDescription] = useState(initial?.description || "");
@@ -33,7 +35,7 @@ export default function TreeForm({
   const [latitude, setLatitude] = useState(initial?.latitude ?? null);
   const [longitude, setLongitude] = useState(initial?.longitude ?? null);
   const [health, setHealth] = useState(initial?.health || "");
-  const [locationType, setLocationType] = useState(initial?.locationType || "");
+  const [locationType, setLocationType] = useState(initial?.location_type || "");
   const [images, setImages] = useState(() => {
     if (initial?.images?.length) return initial.images;
     if (initial?.image_url) return [initial.image_url];
@@ -57,10 +59,10 @@ export default function TreeForm({
     setProcessingImages(true);
     setSaveError("");
     try {
-      const dataUrls = await Promise.all(files.map(fileToDataUrl));
-      setImages((prev) => [...prev, ...dataUrls]);
+      const urls = await Promise.all(files.map((f) => uploadTreeImage(f)));
+      setImages((prev) => [...prev, ...urls]);
     } catch (err) {
-      setSaveError(err.message || "Could not process that photo.");
+      setSaveError(err.message || "Could not upload that photo.");
     } finally {
       setProcessingImages(false);
     }
@@ -101,7 +103,6 @@ export default function TreeForm({
     try {
       await onSubmit({
         name: name.trim(),
-        color,
         description,
         location,
         latitude,
@@ -117,17 +118,9 @@ export default function TreeForm({
     }
   }
 
-  return (
-    <main className="flex-1 max-w-xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10">
-      <Link
-        href="/"
-        className="focus-ring rounded inline-flex items-center gap-1 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 mb-4 transition-colors duration-150"
-      >
-        <ChevronLeftIcon className="w-4 h-4" />
-        Back
-      </Link>
-
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm shadow-slate-200/60 dark:shadow-none p-5 sm:p-8">
+  const formBody = (
+    <>
+      {!embedded && (
         <div className="flex items-center gap-3 mb-6">
           <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-green-600 text-white shrink-0">
             <LeafIcon className="w-5 h-5" />
@@ -141,6 +134,7 @@ export default function TreeForm({
             </p>
           </div>
         </div>
+      )}
 
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
           <div>
@@ -161,42 +155,16 @@ export default function TreeForm({
                 Please select a tree type to continue.
               </p>
             )}
-          </div>
-
-          <div>
-            <label className={labelClass}>Tree Color</label>
-            <div className="flex flex-wrap gap-2">
-              {COLOR_PALETTE.map((swatch) => {
-                const active = color === swatch;
-                return (
-                  <button
-                    key={swatch}
-                    type="button"
-                    onClick={() => setColor(swatch)}
-                    aria-label={`Use color ${swatch}`}
-                    aria-pressed={active}
-                    className={`focus-ring flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-offset-2 dark:ring-offset-slate-800 transition-transform duration-150 ${
-                      active ? "scale-110" : "ring-transparent hover:scale-105"
-                    }`}
-                    style={{
-                      backgroundColor: swatch,
-                      "--tw-ring-color": active ? swatch : "transparent",
-                    }}
-                  >
-                    {active && <CheckCircleIcon className="w-4 h-4 text-white" />}
-                  </button>
-                );
-              })}
-            </div>
             <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
-              Defaults to the tree type&apos;s color — pick a different one just for this tree if you like.
+              Every tree of this type shares its color — pick a type&apos;s color
+              when creating it, or from the admin panel.
             </p>
           </div>
 
           <div>
             <label className={labelClass}>Health Status</label>
             <div className="grid grid-cols-3 gap-2">
-              {HEALTH_STATUSES.map((status) => {
+              {healthStatuses.map((status) => {
                 const active = health === status.value;
                 return (
                   <button
@@ -279,9 +247,9 @@ export default function TreeForm({
                   className="focus-ring appearance-none w-full min-h-[40px] border border-slate-300 dark:border-slate-600 rounded-xl pl-3 pr-8 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-shadow duration-150"
                 >
                   <option value="">Not specified</option>
-                  {LOCATION_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
+                  {locationTypes.map((type) => (
+                    <option key={type.name} value={type.name}>
+                      {type.name}
                     </option>
                   ))}
                 </select>
@@ -419,6 +387,23 @@ export default function TreeForm({
             {saving ? "Saving..." : processingImages ? "Processing photo..." : submitLabel}
           </button>
         </form>
+    </>
+  );
+
+  if (embedded) return formBody;
+
+  return (
+    <main className="flex-1 max-w-xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <Link
+        href="/"
+        className="focus-ring rounded inline-flex items-center gap-1 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 mb-4 transition-colors duration-150"
+      >
+        <ChevronLeftIcon className="w-4 h-4" />
+        Back
+      </Link>
+
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm shadow-slate-200/60 dark:shadow-none p-5 sm:p-8">
+        {formBody}
       </div>
     </main>
   );

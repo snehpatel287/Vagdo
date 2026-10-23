@@ -2,6 +2,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import AddTreeModal from "@/components/AddTreeModal";
+import { AuthProvider } from "@/lib/auth/AuthProvider";
+import { AddTreeModalProvider } from "@/lib/ui/AddTreeModalContext";
+import { ReferenceDataProvider } from "@/lib/reference/ReferenceDataProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,8 +69,15 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]"
       >
-        <Navbar />
-        <div className="flex-1 flex flex-col">{children}</div>
+        <AuthProvider>
+          <ReferenceDataProvider>
+            <AddTreeModalProvider>
+              <Navbar />
+              <div className="flex-1 flex flex-col">{children}</div>
+              <AddTreeModal />
+            </AddTreeModalProvider>
+          </ReferenceDataProvider>
+        </AuthProvider>
         <Script
           id="sw-register"
           strategy="afterInteractive"

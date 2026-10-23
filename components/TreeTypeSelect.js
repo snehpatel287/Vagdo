@@ -1,20 +1,35 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getTreeTypes, addTreeType, CATEGORIES, DEFAULT_CATEGORY } from "@/lib/treeTypes";
+import {
+  getTreeTypes,
+  addTreeType,
+  COLOR_PALETTE,
+  DEFAULT_CATEGORY,
+} from "@/lib/treeTypes";
+import { useReferenceData } from "@/lib/reference/ReferenceDataProvider";
 import { ChevronDownIcon, FilterIcon, PlusIcon } from "@/components/icons";
 
 export default function TreeTypeSelect({ value, color, onChange, invalid }) {
+  const { categories } = useReferenceData();
   const [open, setOpen] = useState(false);
   const [types, setTypes] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState(null);
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newCategory, setNewCategory] = useState(DEFAULT_CATEGORY);
+  const [newColor, setNewColor] = useState(COLOR_PALETTE[0]);
+  const [addError, setAddError] = useState("");
   const boxRef = useRef(null);
 
+  function refreshTypes() {
+    getTreeTypes()
+      .then(setTypes)
+      .catch(() => setTypes([]));
+  }
+
   useEffect(() => {
-    setTypes(getTreeTypes());
+    refreshTypes();
   }, []);
 
   const visibleTypes = categoryFilter
@@ -38,13 +53,19 @@ export default function TreeTypeSelect({ value, color, onChange, invalid }) {
     setAdding(false);
   }
 
-  function confirmAdd() {
-    const type = addTreeType(newName, newCategory);
-    if (!type) return;
-    setTypes(getTreeTypes());
-    setNewName("");
-    setNewCategory(DEFAULT_CATEGORY);
-    selectType(type);
+  async function confirmAdd() {
+    setAddError("");
+    try {
+      const type = await addTreeType(newName, newCategory, newColor);
+      if (!type) return;
+      refreshTypes();
+      setNewName("");
+      setNewCategory(DEFAULT_CATEGORY);
+      setNewColor(COLOR_PALETTE[0]);
+      selectType(type);
+    } catch (err) {
+      setAddError(err.message || "Could not add that tree type.");
+    }
   }
 
   return (
@@ -103,18 +124,18 @@ export default function TreeTypeSelect({ value, color, onChange, invalid }) {
             >
               All
             </button>
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <button
-                key={cat}
+                key={cat.name}
                 type="button"
-                onClick={() => setCategoryFilter(cat)}
+                onClick={() => setCategoryFilter(cat.name)}
                 className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-150 ${
-                  categoryFilter === cat
+                  categoryFilter === cat.name
                     ? "bg-green-600 text-white"
                     : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
                 }`}
               >
-                {cat}
+                {cat.name}
               </button>
             ))}
           </div>
@@ -160,15 +181,22 @@ export default function TreeTypeSelect({ value, color, onChange, invalid }) {
                     className="focus-ring w-full min-w-0 border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-2 text-sm focus:border-green-500"
                   />
                   <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={newColor}
+                      onChange={(e) => setNewColor(e.target.value)}
+                      aria-label="New tree type color"
+                      className="shrink-0 w-9 h-9 rounded-full ring-2 ring-slate-200 dark:ring-slate-600 cursor-pointer"
+                    />
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
                       aria-label="New tree type category"
                       className="focus-ring flex-1 min-w-0 border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-2 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:border-green-500"
                     >
-                      {CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
+                      {categories.map((cat) => (
+                        <option key={cat.name} value={cat.name}>
+                          {cat.name}
                         </option>
                       ))}
                     </select>
@@ -180,6 +208,9 @@ export default function TreeTypeSelect({ value, color, onChange, invalid }) {
                       Add
                     </button>
                   </div>
+                  {addError && (
+                    <p className="text-xs text-red-600 dark:text-red-400">{addError}</p>
+                  )}
                 </div>
               ) : (
                 <button

@@ -8,6 +8,7 @@ import "leaflet/dist/leaflet.css";
 import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
 import "react-leaflet-cluster/dist/assets/MarkerCluster.Default.css";
 import { getCoverImage } from "@/lib/trees";
+import { useAuth } from "@/lib/auth/AuthProvider";
 
 // Roughly bounds India (mainland + islands) so the map stays focused on the country
 const INDIA_BOUNDS = [
@@ -51,6 +52,7 @@ function dotIcon(color) {
 }
 
 export default function TreeMap({ trees }) {
+  const { user } = useAuth();
   const located = trees.filter((t) => t.latitude && t.longitude);
 
   // Fit the view to however the located trees are actually spread out,
@@ -112,6 +114,11 @@ export default function TreeMap({ trees }) {
                     {tree.location && (
                       <p className="text-xs text-slate-500 break-words leading-snug mt-0.5">
                         {tree.location}
+                      </p>
+                    )}
+                    {tree.owner_name && tree.user_id !== user?.id && (
+                      <p className="text-[11px] text-slate-400 leading-snug mt-0.5">
+                        by {tree.owner_name}
                       </p>
                     )}
                   </div>

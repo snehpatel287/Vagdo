@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { getTrees, deleteTree } from "@/lib/trees";
-import { seedDemoDataIfNeeded } from "@/lib/seedTrees";
 import { exportAsCsv } from "@/lib/export";
 import TreeCard from "@/components/TreeCard";
 import TreeTypeFilter from "@/components/TreeTypeFilter";
 import Toast from "@/components/Toast";
+import { useAddTreeModal, TREE_ADDED_EVENT } from "@/lib/ui/AddTreeModalContext";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   ArrowsUpDownIcon,
   CalendarIcon,
@@ -35,6 +36,8 @@ const DATE_RANGE_DAYS = {
 };
 
 export default function Home() {
+  const { profile } = useAuth();
+  const isAdmin = profile?.role === "admin";
   const [trees, setTrees] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [typeFilter, setTypeFilter] = useState(null);
@@ -42,14 +45,24 @@ export default function Home() {
   const [sortBy, setSortBy] = useState("newest");
   const [dateRange, setDateRange] = useState("all");
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [loadError, setLoadError] = useState("");
   const pendingTimeoutRef = useRef(null);
+  const { openModal } = useAddTreeModal();
+
+  async function refreshTrees() {
+    try {
+      setTrees(await getTrees());
+    } catch (err) {
+      setLoadError(err.message || "Could not load trees.");
+    }
+  }
 
   useEffect(() => {
-    seedDemoDataIfNeeded();
-    setTrees(getTrees());
-    setLoaded(true);
+    refreshTrees().finally(() => setLoaded(true));
+    window.addEventListener(TREE_ADDED_EVENT, refreshTrees);
     return () => {
       if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+      window.removeEventListener(TREE_ADDED_EVENT, refreshTrees);
     };
   }, []);
 
@@ -64,13 +77,13 @@ export default function Home() {
     // If a previous delete is still pending undo, commit it now.
     if (pendingDelete) {
       finalizePendingDelete();
-      deleteTree(pendingDelete.id);
+      deleteTree(pendingDelete.id).catch(() => {});
       setTrees((prev) => prev.filter((t) => t.id !== pendingDelete.id));
     }
     const tree = trees.find((t) => t.id === id);
-    pendingTimeoutRef.current = setTimeout(() => {
-      deleteTree(id);
-      setTrees(getTrees());
+    pendingTimeoutRef.current = setTimeout(async () => {
+      await deleteTree(id).catch(() => {});
+      await refreshTrees();
       setPendingDelete(null);
       pendingTimeoutRef.current = null;
     }, UNDO_DELAY);
@@ -82,11 +95,11 @@ export default function Home() {
     setPendingDelete(null);
   }
 
-  function handleDismissToast() {
+  async function handleDismissToast() {
     if (!pendingDelete) return;
     finalizePendingDelete();
-    deleteTree(pendingDelete.id);
-    setTrees(getTrees());
+    await deleteTree(pendingDelete.id).catch(() => {});
+    await refreshTrees();
     setPendingDelete(null);
   }
 
@@ -156,22 +169,29 @@ export default function Home() {
       <div className="flex items-center justify-between mb-6 gap-3">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-            Your Trees
+            {isAdmin ? "All Trees" : "Your Trees"}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             {filtersActive
               ? `${filteredTrees.length} of ${visibleTrees.length} tree${visibleTrees.length === 1 ? "" : "s"}`
-              : `${visibleTrees.length} tree${visibleTrees.length === 1 ? "" : "s"} tracked`}
+              : isAdmin
+                ? `${visibleTrees.length} tree${visibleTrees.length === 1 ? "" : "s"} across everyone`
+                : `${visibleTrees.length} tree${visibleTrees.length === 1 ? "" : "s"} tracked`}
           </p>
         </div>
-        <Link
-          href="/add"
+        <button
+          type="button"
+          onClick={openModal}
           className="focus-ring sm:hidden flex items-center gap-1.5 min-h-[44px] bg-green-600 text-white px-4 rounded-xl text-sm font-semibold shadow-sm shadow-green-600/20 transition-colors duration-150 shrink-0"
         >
           <PlusIcon className="w-4 h-4" strokeWidth={2} />
           Add
-        </Link>
+        </button>
       </div>
+
+      {loadError && (
+        <p className="mb-6 text-sm text-red-600 dark:text-red-400">{loadError}</p>
+      )}
 
       {loaded && visibleTrees.length > 0 && (
         <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mb-6">
@@ -328,13 +348,14 @@ export default function Home() {
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 mb-5 max-w-xs">
             Add your first tree with a photo, type, and location.
           </p>
-          <Link
-            href="/add"
+          <button
+            type="button"
+            onClick={openModal}
             className="focus-ring flex items-center gap-1.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white px-5 rounded-xl text-sm font-semibold shadow-sm shadow-green-600/20 transition-colors duration-150"
           >
             <PlusIcon className="w-4 h-4" strokeWidth={2} />
             Add Tree
-          </Link>
+          </button>
         </div>
       ) : filteredTrees.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center py-16 sm:py-24 px-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-white/50 dark:bg-slate-800/30">

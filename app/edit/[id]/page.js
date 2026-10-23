@@ -20,11 +20,11 @@ function EditTree() {
   const [tree, setTree] = useState(undefined); // undefined = loading, null = not found
 
   useEffect(() => {
-    setTree(getTree(id));
+    getTree(id).then(setTree).catch(() => setTree(null));
   }, [id]);
 
   async function handleSubmit(data) {
-    updateTree(id, data);
+    await updateTree(id, data);
     router.push("/");
   }
 

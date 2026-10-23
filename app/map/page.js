@@ -20,8 +20,10 @@ export default function MapPage() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setTrees(getTrees());
-    setLoaded(true);
+    getTrees()
+      .then(setTrees)
+      .catch(() => setTrees([]))
+      .finally(() => setLoaded(true));
   }, []);
 
   const withLocation = trees.filter((t) => t.latitude && t.longitude).length;

@@ -234,3 +234,50 @@ export function CheckCircleIcon(props) {
     </Icon>
   );
 }
+
+export function ShieldIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z" />
+      <path d="M9 12l2 2 4-4" />
+    </Icon>
+  );
+}
+
+export function UserIcon(props) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20c1.2-3.5 4.2-5.5 7.5-5.5s6.3 2 7.5 5.5" />
+    </Icon>
+  );
+}
+
+export function LogoutIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M9 21H6a2 2 0 01-2-2V5a2 2 0 012-2h3" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </Icon>
+  );
+}
+
+export function UserPlusIcon(props) {
+  return (
+    <Icon {...props}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20c1.1-3.3 3.9-5.2 6.5-5.2s5.4 1.9 6.5 5.2" />
+      <path d="M18 8.5v5M15.5 11h5" />
+    </Icon>
+  );
+}
+
+export function LockIcon(props) {
+  return (
+    <Icon {...props}>
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V7.5a4 4 0 118 0V11" />
+    </Icon>
+  );
+}
