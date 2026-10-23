@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getCoverImage, HEALTH_STATUSES } from "@/lib/trees";
 import {
+  LeafIcon,
   MapPinIcon,
   PencilIcon,
   TreeIcon,
@@ -39,11 +40,9 @@ export default function TreeCard({ tree, onDelete }) {
         }
       }}
       aria-label={`View ${tree.name} details`}
-      className="group h-full flex flex-row sm:flex-col bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:border-slate-300 dark:hover:border-slate-600 sm:hover:-translate-y-1 transition-all duration-300 cursor-pointer focus-ring"
+      className="group h-full flex flex-row sm:flex-col bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 sm:hover:-translate-y-0.5 transition-all duration-200 cursor-pointer focus-ring"
     >
-      <div className="hidden sm:block h-1 w-full shrink-0" style={{ background: accent }} />
-
-      <div className="w-24 sm:w-full aspect-square shrink-0 bg-slate-100 dark:bg-slate-700 overflow-hidden relative">
+      <div className="w-24 sm:w-full aspect-square shrink-0 bg-slate-50 dark:bg-slate-700 overflow-hidden relative">
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -56,35 +55,58 @@ export default function TreeCard({ tree, onDelete }) {
           <div
             className="w-full h-full flex items-center justify-center relative overflow-hidden"
             style={{
-              background: `radial-gradient(circle at 30% 25%, ${accent}3d, transparent 60%), linear-gradient(135deg, ${accent}2a, ${accent}0a)`,
+              background: `linear-gradient(160deg, ${accent}14, ${accent}05 55%, transparent)`,
             }}
           >
-            <TreeIcon
-              className="w-7 h-7 sm:w-14 sm:h-14 drop-shadow-sm"
+            <LeafIcon
+              className="absolute -right-3 -bottom-3 w-16 h-16 sm:w-24 sm:h-24 opacity-[0.07] rotate-12"
               style={{ color: accent }}
             />
+            <span
+              className="flex items-center justify-center w-9 h-9 sm:w-14 sm:h-14 rounded-full ring-1"
+              style={{
+                backgroundColor: `${accent}1a`,
+                "--tw-ring-color": `${accent}30`,
+              }}
+            >
+              <TreeIcon
+                className="w-4.5 h-4.5 sm:w-7 sm:h-7"
+                style={{ color: accent }}
+              />
+            </span>
           </div>
         )}
 
-        {healthInfo && (
-          <span
-            className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm"
-            style={{ backgroundColor: healthInfo.color }}
-            title={healthInfo.label}
-          />
-        )}
+        <div className="absolute top-1.5 left-1.5 sm:top-2.5 sm:left-2.5 flex items-center gap-1">
+          {healthInfo && (
+            <>
+              <span
+                className="sm:hidden w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm"
+                style={{ backgroundColor: healthInfo.color }}
+                title={healthInfo.label}
+              />
+              <span
+                className="hidden sm:inline-flex items-center gap-1 pl-1.5 pr-2 py-0.5 rounded-full text-[11px] font-medium text-white shadow-sm backdrop-blur-sm"
+                style={{ backgroundColor: `${healthInfo.color}e6` }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-white/90" />
+                {healthInfo.label}
+              </span>
+            </>
+          )}
+        </div>
 
         {photoCount > 1 && (
-          <span className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 bg-black/60 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full">
+          <span className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 bg-black/55 backdrop-blur-sm text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full">
             +{photoCount - 1}
           </span>
         )}
       </div>
 
       <div className="p-2.5 sm:p-4 flex flex-col justify-center sm:justify-start gap-0.5 sm:gap-1.5 flex-1 min-w-0">
-        <h3 className="font-semibold text-sm sm:text-lg text-slate-900 dark:text-slate-100 flex items-center gap-1.5 sm:gap-2 min-w-0">
+        <h3 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-slate-100 flex items-center gap-1.5 sm:gap-2 min-w-0">
           <span
-            className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0 ring-2 ring-offset-1"
+            className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0 ring-2 ring-offset-1 dark:ring-offset-slate-800"
             style={{ backgroundColor: accent, "--tw-ring-color": `${accent}40` }}
             aria-hidden="true"
           />
@@ -125,7 +147,7 @@ export default function TreeCard({ tree, onDelete }) {
               href={`/edit/${tree.id}`}
               onClick={stop}
               aria-label={`Edit ${tree.name}`}
-              className="focus-ring rounded flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-slate-400 dark:text-slate-500 hover:text-green-700 hover:bg-green-50 transition-colors duration-150"
+              className="focus-ring rounded-lg flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-slate-400 dark:text-slate-500 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10 transition-colors duration-150"
             >
               <PencilIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </Link>
@@ -135,7 +157,7 @@ export default function TreeCard({ tree, onDelete }) {
                 onDelete(tree.id);
               }}
               aria-label={`Delete ${tree.name}`}
-              className="focus-ring rounded flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors duration-150"
+              className="focus-ring rounded-lg flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors duration-150"
             >
               <TrashIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>

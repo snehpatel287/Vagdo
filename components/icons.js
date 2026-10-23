@@ -192,3 +192,45 @@ export function ChevronRightIcon(props) {
     </Icon>
   );
 }
+
+export function ArrowsUpDownIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M3 7.5L6.75 3.75M6.75 3.75L10.5 7.5M6.75 3.75v16.5" />
+      <path d="M21 16.5l-3.75 3.75M17.25 20.25L13.5 16.5M17.25 20.25V3.75" />
+    </Icon>
+  );
+}
+
+export function FilterIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M3.75 5.25h16.5M6.75 12h10.5M10.5 18.75h3" />
+    </Icon>
+  );
+}
+
+export function CalendarIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M6.75 3v2.25M17.25 3v2.25M3.75 8.25h16.5M4.5 5.25h15a.75.75 0 01.75.75v12.75a.75.75 0 01-.75.75h-15a.75.75 0 01-.75-.75V6a.75.75 0 01.75-.75z" />
+    </Icon>
+  );
+}
+
+export function ActivityIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M3 12h3.5l2-5 4 10 2-5H21" />
+    </Icon>
+  );
+}
+
+export function CheckCircleIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M9 12.75l2.25 2.25 4.5-4.5" />
+      <circle cx="12" cy="12" r="9" />
+    </Icon>
+  );
+}

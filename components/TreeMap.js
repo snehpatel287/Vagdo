@@ -42,8 +42,8 @@ function dotIcon(color) {
       height: 16px;
       border-radius: 50%;
       background: ${color || "#9ca3af"};
-      border: 2px solid white;
-      box-shadow: 0 0 2px rgba(0,0,0,0.6);
+      border: 2.5px solid white;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.4);
     "></div>`,
     iconSize: [16, 16],
     iconAnchor: [8, 8],
@@ -88,9 +88,9 @@ export default function TreeMap({ trees }) {
               position={[tree.latitude, tree.longitude]}
               icon={dotIcon(tree.color)}
             >
-              <Tooltip direction="top" offset={[0, -8]} opacity={1}>
+              <Tooltip direction="top" offset={[0, -10]} opacity={1}>
                 <div
-                  className="flex gap-2 items-start w-[200px]"
+                  className="flex gap-2.5 items-start w-[200px]"
                   style={{ whiteSpace: "normal" }}
                 >
                   {cover && (
@@ -98,11 +98,11 @@ export default function TreeMap({ trees }) {
                     <img
                       src={cover}
                       alt={tree.name}
-                      className="w-10 h-10 object-cover rounded shrink-0"
+                      className="w-11 h-11 object-cover rounded-lg shrink-0"
                     />
                   )}
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-sm flex items-center gap-1">
+                  <div className="min-w-0 flex-1 py-0.5">
+                    <p className="font-semibold text-sm text-slate-900 flex items-center gap-1.5">
                       <span
                         className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
                         style={{ backgroundColor: tree.color || "#9ca3af" }}
@@ -110,7 +110,7 @@ export default function TreeMap({ trees }) {
                       {tree.name}
                     </p>
                     {tree.location && (
-                      <p className="text-xs text-slate-600 break-words leading-snug">
+                      <p className="text-xs text-slate-500 break-words leading-snug mt-0.5">
                         {tree.location}
                       </p>
                     )}

@@ -215,6 +215,12 @@ function TreeDetail() {
             </p>
           )}
 
+          {tree.locationType && (
+            <span className="inline-flex items-center gap-1 self-start text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400">
+              {tree.locationType}
+            </span>
+          )}
+
           {tree.latitude && tree.longitude && (
             <a
               href={`https://www.google.com/maps?q=${tree.latitude},${tree.longitude}`}

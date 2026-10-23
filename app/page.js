@@ -9,8 +9,11 @@ import TreeCard from "@/components/TreeCard";
 import TreeTypeFilter from "@/components/TreeTypeFilter";
 import Toast from "@/components/Toast";
 import {
+  ArrowsUpDownIcon,
+  CalendarIcon,
   ChevronDownIcon,
   DownloadIcon,
+  FilterIcon,
   LeafIcon,
   MapIcon,
   PlusIcon,
@@ -163,7 +166,7 @@ export default function Home() {
         </div>
         <Link
           href="/add"
-          className="focus-ring sm:hidden flex items-center gap-1.5 min-h-[44px] bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 rounded-xl text-sm font-semibold shadow-sm shadow-green-600/25 transition-all duration-200 shrink-0"
+          className="focus-ring sm:hidden flex items-center gap-1.5 min-h-[44px] bg-green-600 text-white px-4 rounded-xl text-sm font-semibold shadow-sm shadow-green-600/20 transition-colors duration-150 shrink-0"
         >
           <PlusIcon className="w-4 h-4" strokeWidth={2} />
           Add
@@ -172,8 +175,8 @@ export default function Home() {
 
       {loaded && visibleTrees.length > 0 && (
         <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mb-6">
-          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3">
-            <span className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-green-50 to-emerald-100 text-green-600 shrink-0">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 transition-shadow duration-150 hover:shadow-sm">
+            <span className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 shrink-0">
               <TreeIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </span>
             <div className="min-w-0">
@@ -186,8 +189,8 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3">
-            <span className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 text-purple-600 shrink-0">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 transition-shadow duration-150 hover:shadow-sm">
+            <span className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
               <LeafIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </span>
             <div className="min-w-0">
@@ -202,9 +205,9 @@ export default function Home() {
 
           <Link
             href="/map"
-            className="focus-ring bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 hover:border-blue-300 hover:shadow-sm transition-all duration-150"
+            className="focus-ring bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 hover:border-blue-300 dark:hover:border-blue-500/40 hover:shadow-sm transition-all duration-150"
           >
-            <span className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 shrink-0">
+            <span className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
               <MapIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </span>
             <div className="min-w-0">
@@ -222,7 +225,8 @@ export default function Home() {
       {loaded && visibleTrees.length > 0 && (
         <div className="flex flex-wrap items-end gap-3 sm:gap-4 mb-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 sm:p-4">
           <div className="flex-1 min-w-[160px]">
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+              <SearchIcon className="w-3.5 h-3.5" />
               Search
             </label>
             <div className="relative">
@@ -238,7 +242,8 @@ export default function Home() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+              <ArrowsUpDownIcon className="w-3.5 h-3.5" />
               Sort
             </label>
             <div className="relative">
@@ -256,7 +261,8 @@ export default function Home() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+              <FilterIcon className="w-3.5 h-3.5" />
               Tree Type
             </label>
             <TreeTypeFilter
@@ -267,7 +273,8 @@ export default function Home() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+              <CalendarIcon className="w-3.5 h-3.5" />
               Date Added
             </label>
             <div className="relative">
@@ -303,7 +310,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => exportAsCsv(filteredTrees)}
-              className="focus-ring flex items-center gap-1.5 min-h-[40px] px-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-colors duration-150"
+              className="focus-ring flex items-center gap-1.5 min-h-[40px] px-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/60 hover:border-slate-400 dark:hover:border-slate-500 transition-colors duration-150"
             >
               <DownloadIcon className="w-3.5 h-3.5" />
               CSV
@@ -323,7 +330,7 @@ export default function Home() {
           </p>
           <Link
             href="/add"
-            className="focus-ring flex items-center gap-1.5 min-h-[44px] bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-5 rounded-xl text-sm font-semibold shadow-sm shadow-green-600/25 hover:shadow-md transition-all duration-200"
+            className="focus-ring flex items-center gap-1.5 min-h-[44px] bg-green-600 hover:bg-green-700 text-white px-5 rounded-xl text-sm font-semibold shadow-sm shadow-green-600/20 transition-colors duration-150"
           >
             <PlusIcon className="w-4 h-4" strokeWidth={2} />
             Add Tree

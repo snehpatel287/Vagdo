@@ -2,11 +2,15 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { fileToDataUrl, HEALTH_STATUSES } from "@/lib/trees";
+import { fileToDataUrl, HEALTH_STATUSES, LOCATION_TYPES } from "@/lib/trees";
+import { COLOR_PALETTE } from "@/lib/treeTypes";
 import TreeTypeSelect from "@/components/TreeTypeSelect";
 import LocationInput from "@/components/LocationInput";
 import {
   CameraIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
   LeafIcon,
   MapPinIcon,
   PhotoIcon,
@@ -29,6 +33,7 @@ export default function TreeForm({
   const [latitude, setLatitude] = useState(initial?.latitude ?? null);
   const [longitude, setLongitude] = useState(initial?.longitude ?? null);
   const [health, setHealth] = useState(initial?.health || "");
+  const [locationType, setLocationType] = useState(initial?.locationType || "");
   const [images, setImages] = useState(() => {
     if (initial?.images?.length) return initial.images;
     if (initial?.image_url) return [initial.image_url];
@@ -103,6 +108,7 @@ export default function TreeForm({
         longitude,
         images,
         health,
+        locationType,
       });
     } catch (err) {
       setSaveError(err.message || "Something went wrong saving this tree.");
@@ -117,12 +123,13 @@ export default function TreeForm({
         href="/"
         className="focus-ring rounded inline-flex items-center gap-1 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 mb-4 transition-colors duration-150"
       >
-        ← Back
+        <ChevronLeftIcon className="w-4 h-4" />
+        Back
       </Link>
 
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm shadow-slate-200/60 p-5 sm:p-8">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm shadow-slate-200/60 dark:shadow-none p-5 sm:p-8">
         <div className="flex items-center gap-3 mb-6">
-          <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shrink-0 shadow-sm shadow-green-600/30">
+          <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-green-600 text-white shrink-0">
             <LeafIcon className="w-5 h-5" />
           </span>
           <div>
@@ -157,6 +164,36 @@ export default function TreeForm({
           </div>
 
           <div>
+            <label className={labelClass}>Tree Color</label>
+            <div className="flex flex-wrap gap-2">
+              {COLOR_PALETTE.map((swatch) => {
+                const active = color === swatch;
+                return (
+                  <button
+                    key={swatch}
+                    type="button"
+                    onClick={() => setColor(swatch)}
+                    aria-label={`Use color ${swatch}`}
+                    aria-pressed={active}
+                    className={`focus-ring flex items-center justify-center w-8 h-8 rounded-full ring-2 ring-offset-2 dark:ring-offset-slate-800 transition-transform duration-150 ${
+                      active ? "scale-110" : "ring-transparent hover:scale-105"
+                    }`}
+                    style={{
+                      backgroundColor: swatch,
+                      "--tw-ring-color": active ? swatch : "transparent",
+                    }}
+                  >
+                    {active && <CheckCircleIcon className="w-4 h-4 text-white" />}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1.5 text-xs text-slate-400 dark:text-slate-500">
+              Defaults to the tree type&apos;s color — pick a different one just for this tree if you like.
+            </p>
+          </div>
+
+          <div>
             <label className={labelClass}>Health Status</label>
             <div className="grid grid-cols-3 gap-2">
               {HEALTH_STATUSES.map((status) => {
@@ -168,19 +205,21 @@ export default function TreeForm({
                     onClick={() =>
                       setHealth(active ? "" : status.value)
                     }
-                    className={`focus-ring flex items-center justify-center gap-1.5 min-h-[40px] px-2 rounded-xl text-xs sm:text-sm font-medium border transition-colors duration-150 ${
+                    className={`focus-ring flex items-center justify-center gap-1.5 min-h-[44px] px-2 rounded-xl text-xs sm:text-sm font-medium border transition-all duration-150 ${
                       active
-                        ? "text-white border-transparent"
-                        : "border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/60"
+                        ? "text-white border-transparent shadow-sm"
+                        : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700/60"
                     }`}
                     style={active ? { backgroundColor: status.color } : undefined}
                   >
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{
-                        backgroundColor: active ? "white" : status.color,
-                      }}
-                    />
+                    {active ? (
+                      <CheckCircleIcon className="w-3.5 h-3.5 shrink-0" />
+                    ) : (
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: status.color }}
+                      />
+                    )}
                     {status.label}
                   </button>
                 );
@@ -227,6 +266,28 @@ export default function TreeForm({
                 </p>
               )
             )}
+
+            <div className="mt-3">
+              <label className={labelClass} htmlFor="tree-location-type">
+                Location Type
+              </label>
+              <div className="relative">
+                <select
+                  id="tree-location-type"
+                  value={locationType}
+                  onChange={(e) => setLocationType(e.target.value)}
+                  className="focus-ring appearance-none w-full min-h-[40px] border border-slate-300 dark:border-slate-600 rounded-xl pl-3 pr-8 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-shadow duration-150"
+                >
+                  <option value="">Not specified</option>
+                  {LOCATION_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
           </div>
 
           <div>
@@ -346,12 +407,12 @@ export default function TreeForm({
           <button
             type="submit"
             disabled={saving || processingImages || (attempted && !isValid)}
-            className={`focus-ring flex items-center justify-center gap-2 w-full min-h-[48px] rounded-xl font-semibold shadow-sm transition-all duration-200 ${
+            className={`focus-ring flex items-center justify-center gap-2 w-full min-h-[48px] rounded-xl font-semibold shadow-sm transition-colors duration-150 ${
               saving || processingImages
                 ? "bg-green-600/70 text-white cursor-wait"
                 : attempted && !isValid
                   ? "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none"
-                  : "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 active:from-green-800 active:to-emerald-800 text-white shadow-green-600/25 hover:shadow-lg hover:shadow-green-600/30 hover:-translate-y-0.5"
+                  : "bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-green-600/20"
             }`}
           >
             {(saving || processingImages) && <SpinnerIcon className="w-4 h-4" />}

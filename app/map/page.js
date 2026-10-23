@@ -33,17 +33,17 @@ export default function MapPage() {
           <h1 className="text-lg sm:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
             Tree Map
           </h1>
-          {withLocation > 0 && (
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              {withLocation} tree{withLocation === 1 ? "" : "s"} located
-            </p>
-          )}
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            {withLocation > 0
+              ? `${withLocation} tree${withLocation === 1 ? "" : "s"} located`
+              : "Trees with a saved location appear here"}
+          </p>
         </div>
       </div>
 
       {!loaded ? null : withLocation === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center px-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-white/50 dark:bg-slate-800/30">
-          <span className="flex items-center justify-center w-16 h-16 rounded-2xl bg-green-50 text-green-600 mb-4">
+          <span className="flex items-center justify-center w-16 h-16 rounded-2xl bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 mb-4">
             <MapIcon className="w-8 h-8" />
           </span>
           <p className="text-slate-800 dark:text-slate-200 font-semibold">
@@ -55,7 +55,7 @@ export default function MapPage() {
           </p>
         </div>
       ) : (
-        <div className="relative flex-1 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="relative flex-1 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-slate-100 dark:bg-slate-800">
           <TreeMap trees={trees} />
         </div>
       )}

@@ -1,16 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
   <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#bee3f8"/>
-      <stop offset="100%" stop-color="#eaf6ff"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fef1e8"/>
+      <stop offset="100%" stop-color="#ffffff"/>
     </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="38%" r="55%">
+      <stop offset="0%" stop-color="#fcc096" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#fcc096" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="500" height="500" fill="url(#sky)"/>
-  <circle cx="410" cy="90" r="45" fill="#fde68a"/>
-  <rect x="0" y="380" width="500" height="120" fill="#d9f2d2"/>
-  <rect x="228" y="300" width="44" height="130" rx="8" fill="#925c2d"/>
-  <circle cx="250" cy="230" r="110" fill="#f97316" opacity="0.92"/>
-  <circle cx="165" cy="275" r="80" fill="#f97316" opacity="0.88"/>
-  <circle cx="335" cy="275" r="80" fill="#f97316" opacity="0.88"/>
-  <circle cx="250" cy="330" r="85" fill="#f97316" opacity="0.8"/>
+  <rect width="500" height="500" fill="url(#bg)"/>
+  <rect width="500" height="500" fill="url(#glow)"/>
+  <ellipse cx="250" cy="396" rx="130" ry="16" fill="#e26a18" opacity="0.12"/>
+  
+  <rect x="237" y="300" width="26" height="100" rx="10.833333333333334" fill="#8a6a4a"/>
+  <rect x="237" y="300" width="10" height="100" rx="10.833333333333334" fill="#6b4f34" opacity="0.5"/>
+  <circle cx="250" cy="254" r="117.60000000000001" fill="#cf621a"/>
+  <circle cx="165.328" cy="291.632" r="84.672" fill="#cf621a"/>
+  <circle cx="334.672" cy="291.632" r="84.672" fill="#cf621a"/>
+  <circle cx="250" cy="242.24" r="108.19200000000001" fill="#f97316"/>
+  <circle cx="197.07999999999998" cy="277.52" r="58.800000000000004" fill="#fb9d5c" opacity="0.8"/>
 </svg>
