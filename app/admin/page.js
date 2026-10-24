@@ -1057,7 +1057,7 @@ function UsersTab() {
     const confirmed = await confirmAction({
       title: `Delete ${displayName}?`,
       message:
-        "Their login and profile are permanently deleted — this can't be undone. Every tree they've added stays in the database, just without an owner shown.",
+        "Their login and profile are permanently deleted — this can't be undone. Every tree they've added stays in the database, still showing their name. If they're invited again with the same email, their trees automatically become theirs again.",
       confirmLabel: "Delete user",
       danger: true,
     });
