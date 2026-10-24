@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/serverClient";
-import { getSupabaseAdminClient } from "@/lib/supabase/adminClient";
 
+// Sends the target user a password-reset email so they can set a new
+// password without needing a fresh invite. Uses Supabase's built-in
+// recovery email — it lands on /auth/callback -> /set-password, same as
+// the invite flow.
 export async function POST(request) {
   const supabase = await getSupabaseServerClient();
   const {
@@ -25,22 +28,15 @@ export async function POST(request) {
     );
   }
 
-  const { userId } = await request.json();
-  if (!userId) {
-    return NextResponse.json({ error: "User id is required." }, { status: 400 });
-  }
-  if (userId === user.id) {
-    return NextResponse.json(
-      { error: "You can't delete your own account." },
-      { status: 400 }
-    );
+  const { email } = await request.json();
+  if (!email) {
+    return NextResponse.json({ error: "Email is required." }, { status: 400 });
   }
 
-  const admin = getSupabaseAdminClient();
-  // Cascades: the user's profile row and every tree they own are deleted
-  // along with them (trees.user_id / profiles.id both reference
-  // auth.users(id) on delete cascade).
-  const { error } = await admin.auth.admin.deleteUser(userId);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/auth/callback`,
+  });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });

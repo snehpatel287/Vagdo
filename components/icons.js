@@ -292,3 +292,21 @@ export function AlertTriangleIcon(props) {
   );
 }
 
+export function UnlockIcon(props) {
+  return (
+    <Icon {...props}>
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V7.5a4 4 0 017.5-2" />
+    </Icon>
+  );
+}
+
+export function MailIcon(props) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3.5 6.5L12 13l8.5-6.5" />
+    </Icon>
+  );
+}
+

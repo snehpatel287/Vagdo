@@ -25,7 +25,7 @@ export async function POST(request) {
     );
   }
 
-  const { email, firstName, lastName, canAddTree } = await request.json();
+  const { email, firstName, lastName } = await request.json();
   if (!email?.trim()) {
     return NextResponse.json({ error: "Email is required." }, { status: 400 });
   }
@@ -40,7 +40,6 @@ export async function POST(request) {
       data: {
         first_name: firstName?.trim() || "",
         last_name: lastName?.trim() || "",
-        can_add_tree: !!canAddTree,
       },
     }
   );

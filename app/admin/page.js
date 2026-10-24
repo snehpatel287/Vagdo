@@ -36,12 +36,15 @@ import { useConfirm } from "@/lib/ui/ConfirmDialogContext";
 import {
   CheckCircleIcon,
   ChevronDownIcon,
+  LockIcon,
+  MailIcon,
   PencilIcon,
   PlusIcon,
   ShieldIcon,
   SpinnerIcon,
   TrashIcon,
   TreeIcon,
+  UnlockIcon,
   UserIcon,
   UserPlusIcon,
   XMarkIcon,
@@ -944,7 +947,9 @@ function UsersTab() {
   const [editFirst, setEditFirst] = useState("");
   const [editLast, setEditLast] = useState("");
   const [showInvite, setShowInvite] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
+  const [accessBusyId, setAccessBusyId] = useState(null);
+  const [resetBusyId, setResetBusyId] = useState(null);
+  const [resetSentId, setResetSentId] = useState(null);
   const [error, setError] = useState("");
 
   function load() {
@@ -960,15 +965,6 @@ function UsersTab() {
   useEffect(() => {
     load();
   }, []);
-
-  async function toggleCanAdd(user) {
-    const supabase = getSupabaseBrowserClient();
-    await supabase
-      .from("profiles")
-      .update({ can_add_tree: !user.can_add_tree })
-      .eq("id", user.id);
-    load();
-  }
 
   async function toggleRole(user) {
     const nextRole = user.role === "admin" ? "user" : "admin";
@@ -1004,32 +1000,54 @@ function UsersTab() {
     load();
   }
 
-  async function handleDeleteUser(user) {
+  async function handleToggleAccess(user) {
     const displayName = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email;
+    const revoke = !user.access_revoked;
     const confirmed = await confirmAction({
-      title: `Delete ${displayName}?`,
-      message:
-        "This permanently deletes their account and every tree they've added. This can't be undone.",
-      confirmLabel: "Delete user",
-      danger: true,
+      title: revoke ? `Revoke access for ${displayName}?` : `Restore access for ${displayName}?`,
+      message: revoke
+        ? "They won't be able to sign in anymore. Their profile and every tree they've added stay exactly as they are — nothing is deleted."
+        : "They'll be able to sign in again with their existing password.",
+      confirmLabel: revoke ? "Revoke access" : "Restore access",
+      danger: revoke,
     });
     if (!confirmed) return;
 
     setError("");
-    setDeletingId(user.id);
+    setAccessBusyId(user.id);
     try {
-      const res = await fetch("/api/admin/delete-user", {
+      const res = await fetch("/api/admin/set-access", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
+        body: JSON.stringify({ userId: user.id, revoke }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Could not delete that user.");
+      if (!res.ok) throw new Error(body.error || "Could not update their access.");
       load();
     } catch (err) {
       setError(err.message);
     } finally {
-      setDeletingId(null);
+      setAccessBusyId(null);
+    }
+  }
+
+  async function handleResetPassword(user) {
+    setError("");
+    setResetBusyId(user.id);
+    try {
+      const res = await fetch("/api/admin/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Could not send a reset email.");
+      setResetSentId(user.id);
+      setTimeout(() => setResetSentId(null), 4000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setResetBusyId(null);
     }
   }
 
@@ -1050,43 +1068,62 @@ function UsersTab() {
     );
   }
 
-  function CanAddToggle({ user }) {
+  function StatusBadge({ user }) {
+    if (!user.access_revoked) return null;
     return (
-      <button
-        type="button"
-        onClick={() => toggleCanAdd(user)}
-        role="switch"
-        aria-checked={user.can_add_tree}
-        aria-label={`Can add tree: ${user.can_add_tree ? "on" : "off"}`}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-150 focus-ring ${
-          user.can_add_tree ? "bg-green-600" : "bg-slate-300 dark:bg-slate-600"
-        }`}
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-150 ${
-            user.can_add_tree ? "translate-x-6" : "translate-x-1"
-          }`}
-        />
-      </button>
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400">
+        <LockIcon className="w-3 h-3" />
+        Access revoked
+      </span>
     );
   }
 
-  function DeleteUserButton({ user }) {
+  function AccessButtons({ user }) {
     if (user.id === currentUser?.id) return null;
+    const isRevoked = !!user.access_revoked;
     return (
-      <button
-        type="button"
-        onClick={() => handleDeleteUser(user)}
-        disabled={deletingId === user.id}
-        aria-label={`Delete ${user.first_name || user.email}`}
-        className="focus-ring flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 transition-colors duration-150"
-      >
-        {deletingId === user.id ? (
-          <SpinnerIcon className="w-3.5 h-3.5" />
-        ) : (
-          <TrashIcon className="w-3.5 h-3.5" />
-        )}
-      </button>
+      <div className="flex items-center gap-0.5">
+        <button
+          type="button"
+          onClick={() => handleResetPassword(user)}
+          disabled={resetBusyId === user.id}
+          aria-label={`Send password reset to ${user.first_name || user.email}`}
+          title="Send password reset email"
+          className="focus-ring flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10 disabled:opacity-50 transition-colors duration-150"
+        >
+          {resetBusyId === user.id ? (
+            <SpinnerIcon className="w-3.5 h-3.5" />
+          ) : resetSentId === user.id ? (
+            <CheckCircleIcon className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+          ) : (
+            <MailIcon className="w-3.5 h-3.5" />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleToggleAccess(user)}
+          disabled={accessBusyId === user.id}
+          aria-label={
+            isRevoked
+              ? `Restore access for ${user.first_name || user.email}`
+              : `Revoke access for ${user.first_name || user.email}`
+          }
+          title={isRevoked ? "Restore access" : "Revoke access"}
+          className={`focus-ring flex items-center justify-center w-8 h-8 rounded-lg disabled:opacity-50 transition-colors duration-150 ${
+            isRevoked
+              ? "text-slate-400 dark:text-slate-500 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10"
+              : "text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+          }`}
+        >
+          {accessBusyId === user.id ? (
+            <SpinnerIcon className="w-3.5 h-3.5" />
+          ) : isRevoked ? (
+            <UnlockIcon className="w-3.5 h-3.5" />
+          ) : (
+            <LockIcon className="w-3.5 h-3.5" />
+          )}
+        </button>
+      </div>
     );
   }
 
@@ -1185,15 +1222,12 @@ function UsersTab() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <NameEditor user={u} />
-                  <DeleteUserButton user={u} />
+                  <AccessButtons user={u} />
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{u.email}</p>
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center gap-1.5 flex-wrap pt-1">
                   <RoleBadge user={u} />
-                  <label className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                    Can add tree
-                    <CanAddToggle user={u} />
-                  </label>
+                  <StatusBadge user={u} />
                 </div>
               </div>
             ))}
@@ -1207,7 +1241,7 @@ function UsersTab() {
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Role</th>
-                  <th className="px-4 py-3 font-medium">Can add tree</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium" />
                 </tr>
               </thead>
@@ -1227,10 +1261,14 @@ function UsersTab() {
                       <RoleBadge user={u} />
                     </td>
                     <td className="px-4 py-3">
-                      <CanAddToggle user={u} />
+                      {u.access_revoked ? (
+                        <StatusBadge user={u} />
+                      ) : (
+                        <span className="text-xs text-slate-400 dark:text-slate-500">Active</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
-                      <DeleteUserButton user={u} />
+                      <AccessButtons user={u} />
                     </td>
                   </tr>
                 ))}
@@ -1247,7 +1285,6 @@ function InviteForm({ onInvited }) {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [canAddTree, setCanAddTree] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -1259,7 +1296,7 @@ function InviteForm({ onInvited }) {
       const res = await fetch("/api/admin/invite-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, firstName, lastName, canAddTree }),
+        body: JSON.stringify({ email, firstName, lastName }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error || "Could not invite that user.");
@@ -1308,15 +1345,6 @@ function InviteForm({ onInvited }) {
           className="focus-ring w-full min-h-[40px] border border-slate-300 dark:border-slate-600 rounded-xl px-3 text-sm bg-white dark:bg-slate-800"
         />
       </div>
-      <label className="flex items-center gap-2 min-h-[40px] text-sm text-slate-600 dark:text-slate-300">
-        <input
-          type="checkbox"
-          checked={canAddTree}
-          onChange={(e) => setCanAddTree(e.target.checked)}
-          className="w-4 h-4 rounded accent-green-600"
-        />
-        Can add trees
-      </label>
       {error && (
         <p className="w-full text-sm text-red-600 dark:text-red-400">{error}</p>
       )}

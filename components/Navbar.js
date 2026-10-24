@@ -23,7 +23,6 @@ export default function Navbar() {
   const { user, profile, signOut } = useAuth();
   const { openModal } = useAddTreeModal();
   const isAdmin = profile?.role === "admin";
-  const canAddTree = isAdmin || profile?.can_add_tree;
 
   if (!user) {
     return (
@@ -95,16 +94,14 @@ export default function Navbar() {
             </Link>
           )}
 
-          {canAddTree && (
-            <button
-              type="button"
-              onClick={openModal}
-              className="focus-ring flex items-center gap-1.5 min-h-[44px] bg-green-600 hover:bg-green-700 active:bg-green-800 text-white px-3 sm:px-4 rounded-lg text-sm font-semibold shadow-sm shadow-green-600/20 transition-colors duration-150 ml-0.5"
-            >
-              <PlusIcon className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
-              <span className="hidden sm:inline">Add Tree</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={openModal}
+            className="focus-ring flex items-center gap-1.5 min-h-[44px] bg-green-600 hover:bg-green-700 active:bg-green-800 text-white px-3 sm:px-4 rounded-lg text-sm font-semibold shadow-sm shadow-green-600/20 transition-colors duration-150 ml-0.5"
+          >
+            <PlusIcon className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
+            <span className="hidden sm:inline">Add Tree</span>
+          </button>
 
           <div className="flex items-center gap-0.5 sm:gap-2 md:ml-1 md:pl-3 md:border-l md:border-slate-200 dark:md:border-slate-700">
             <span className="hidden md:inline text-sm text-slate-600 dark:text-slate-300 truncate max-w-[120px]">
