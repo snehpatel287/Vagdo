@@ -35,6 +35,7 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { useConfirm } from "@/lib/ui/ConfirmDialogContext";
 import {
   CheckCircleIcon,
+  ChevronDownIcon,
   PencilIcon,
   PlusIcon,
   ShieldIcon,
@@ -379,17 +380,20 @@ function TreeTypesTab() {
           <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
             Category
           </label>
-          <select
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            className="focus-ring w-full min-h-[40px] border border-slate-300 dark:border-slate-600 rounded-xl px-3 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-          >
-            {categories.map((cat) => (
-              <option key={cat.name} value={cat.name}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              className="focus-ring appearance-none w-full min-h-[40px] border border-slate-300 dark:border-slate-600 rounded-xl pl-3 pr-8 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+            >
+              {categories.map((cat) => (
+                <option key={cat.name} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDownIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
         </div>
         {addError && (
           <p className="w-full text-sm text-red-600 dark:text-red-400">{addError}</p>
@@ -422,17 +426,20 @@ function TreeTypesTab() {
               <p className="font-medium text-slate-900 dark:text-slate-100 truncate">
                 {type.name}
               </p>
-              <select
-                value={type.category || DEFAULT_CATEGORY}
-                onChange={(e) => handleCategoryChange(type, e.target.value)}
-                className="focus-ring mt-1 w-full border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1 text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-              >
-                {categories.map((cat) => (
-                  <option key={cat.name} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative mt-1">
+                <select
+                  value={type.category || DEFAULT_CATEGORY}
+                  onChange={(e) => handleCategoryChange(type, e.target.value)}
+                  className="focus-ring appearance-none w-full border border-slate-300 dark:border-slate-600 rounded-lg pl-2 pr-6 py-1 text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.name} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="w-3 h-3 text-slate-400 dark:text-slate-500 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
             {savingName === type.name && (
               <SpinnerIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -487,17 +494,20 @@ function TreeTypesTab() {
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <select
-                    value={type.category || DEFAULT_CATEGORY}
-                    onChange={(e) => handleCategoryChange(type, e.target.value)}
-                    className="focus-ring border border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat.name} value={cat.name}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative inline-block">
+                    <select
+                      value={type.category || DEFAULT_CATEGORY}
+                      onChange={(e) => handleCategoryChange(type, e.target.value)}
+                      className="focus-ring appearance-none border border-slate-300 dark:border-slate-600 rounded-lg pl-2.5 pr-8 py-1.5 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat.name} value={cat.name}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDownIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <button
