@@ -36,6 +36,9 @@ export default function TreeForm({
   const [longitude, setLongitude] = useState(initial?.longitude ?? null);
   const [health, setHealth] = useState(initial?.health || "");
   const [locationType, setLocationType] = useState(initial?.location_type || "");
+  const [hasBirdNesting, setHasBirdNesting] = useState(
+    initial?.has_bird_nesting ?? null
+  );
   const [images, setImages] = useState(() => {
     if (initial?.images?.length) return initial.images;
     if (initial?.image_url) return [initial.image_url];
@@ -110,6 +113,7 @@ export default function TreeForm({
         images,
         health,
         locationType,
+        hasBirdNesting,
       });
     } catch (err) {
       setSaveError(err.message || "Something went wrong saving this tree.");
@@ -235,25 +239,55 @@ export default function TreeForm({
               )
             )}
 
-            <div className="mt-3">
-              <label className={labelClass} htmlFor="tree-location-type">
-                Location Type
-              </label>
-              <div className="relative">
-                <select
-                  id="tree-location-type"
-                  value={locationType}
-                  onChange={(e) => setLocationType(e.target.value)}
-                  className="focus-ring appearance-none w-full min-h-[40px] border border-slate-300 dark:border-slate-600 rounded-xl pl-3 pr-8 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-shadow duration-150"
-                >
-                  <option value="">Not specified</option>
-                  {locationTypes.map((type) => (
-                    <option key={type.name} value={type.name}>
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDownIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <label className={labelClass} htmlFor="tree-location-type">
+                  Location Type
+                </label>
+                <div className="relative">
+                  <select
+                    id="tree-location-type"
+                    value={locationType}
+                    onChange={(e) => setLocationType(e.target.value)}
+                    className="focus-ring appearance-none w-full min-h-[40px] border border-slate-300 dark:border-slate-600 rounded-xl pl-3 pr-8 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 transition-shadow duration-150"
+                  >
+                    <option value="">Not specified</option>
+                    {locationTypes.map((type) => (
+                      <option key={type.name} value={type.name}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+
+              <div>
+                <label className={labelClass}>Bird Nesting 🪹</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: true, label: "Yes" },
+                    { value: false, label: "No" },
+                  ].map((opt) => {
+                    const active = hasBirdNesting === opt.value;
+                    return (
+                      <button
+                        key={opt.label}
+                        type="button"
+                        onClick={() =>
+                          setHasBirdNesting(active ? null : opt.value)
+                        }
+                        className={`focus-ring min-h-[40px] rounded-xl text-sm font-medium border transition-colors duration-150 ${
+                          active
+                            ? "bg-green-600 border-transparent text-white"
+                            : "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/60"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>

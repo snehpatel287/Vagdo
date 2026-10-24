@@ -8,7 +8,6 @@ import "leaflet/dist/leaflet.css";
 import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
 import "react-leaflet-cluster/dist/assets/MarkerCluster.Default.css";
 import { getCoverImage } from "@/lib/trees";
-import { useAuth } from "@/lib/auth/AuthProvider";
 
 // Roughly bounds India (mainland + islands) so the map stays focused on the country
 const INDIA_BOUNDS = [
@@ -52,7 +51,6 @@ function dotIcon(color) {
 }
 
 export default function TreeMap({ trees }) {
-  const { user } = useAuth();
   const located = trees.filter((t) => t.latitude && t.longitude);
 
   // Fit the view to however the located trees are actually spread out,
@@ -78,8 +76,9 @@ export default function TreeMap({ trees }) {
     >
       <BoundsGuard />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution="Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        maxZoom={19}
       />
       <MarkerClusterGroup chunkedLoading>
         {located.map((tree) => {
@@ -116,7 +115,7 @@ export default function TreeMap({ trees }) {
                         {tree.location}
                       </p>
                     )}
-                    {tree.owner_name && tree.user_id !== user?.id && (
+                    {tree.owner_name && (
                       <p className="text-[11px] text-slate-400 leading-snug mt-0.5">
                         by {tree.owner_name}
                       </p>

@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getTree, deleteTree } from "@/lib/trees";
 import { useReferenceData } from "@/lib/reference/ReferenceDataProvider";
-import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   CalendarIcon,
   ChevronLeftIcon,
@@ -29,7 +28,6 @@ function TreeDetail() {
   const { id } = useParams();
   const router = useRouter();
   const { healthStatuses } = useReferenceData();
-  const { user } = useAuth();
   const [tree, setTree] = useState(undefined); // undefined = loading, null = not found
   const [activeImage, setActiveImage] = useState(0);
 
@@ -76,7 +74,7 @@ function TreeDetail() {
       : [];
   const accent = tree.color || "#22c55e";
   const healthInfo = healthStatuses.find((h) => h.value === tree.health);
-  const showOwner = tree.owner_name && tree.user_id !== user?.id;
+  const showOwner = !!tree.owner_name;
   const addedOn = tree.created_at
     ? new Date(tree.created_at).toLocaleDateString(undefined, {
         year: "numeric",
@@ -224,7 +222,7 @@ function TreeDetail() {
             </div>
           </div>
 
-          {(healthInfo || tree.location_type) && (
+          {(healthInfo || tree.location_type || tree.has_bird_nesting) && (
             <div className="flex flex-wrap gap-2">
               {healthInfo && (
                 <span
@@ -237,6 +235,11 @@ function TreeDetail() {
               {tree.location_type && (
                 <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400">
                   {tree.location_type}
+                </span>
+              )}
+              {tree.has_bird_nesting && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                  🪹 Bird nesting
                 </span>
               )}
             </div>

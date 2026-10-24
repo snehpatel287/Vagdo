@@ -31,6 +31,8 @@ import {
   deleteLocationType,
 } from "@/lib/locationTypes";
 import { useReferenceData } from "@/lib/reference/ReferenceDataProvider";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { useConfirm } from "@/lib/ui/ConfirmDialogContext";
 import {
   CheckCircleIcon,
   PencilIcon,
@@ -96,6 +98,7 @@ export default function AdminPage() {
 }
 
 function AllTreesTab() {
+  const confirmAction = useConfirm();
   const [trees, setTrees] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -109,9 +112,15 @@ function AllTreesTab() {
     load();
   }, []);
 
-  async function handleDelete(id) {
-    if (!window.confirm("Delete this tree? This can't be undone.")) return;
-    await deleteTree(id);
+  async function handleDelete(tree) {
+    const confirmed = await confirmAction({
+      title: `Delete ${tree.name}?`,
+      message: "This can't be undone.",
+      confirmLabel: "Delete",
+      danger: true,
+    });
+    if (!confirmed) return;
+    await deleteTree(tree.id);
     load();
   }
 
@@ -167,7 +176,7 @@ function AllTreesTab() {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => handleDelete(tree.id)}
+                  onClick={() => handleDelete(tree)}
                   aria-label={`Delete ${tree.name}`}
                   className="focus-ring rounded-lg flex items-center justify-center w-8 h-8 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
                 >
@@ -234,7 +243,7 @@ function AllTreesTab() {
                     </Link>
                     <button
                       type="button"
-                      onClick={() => handleDelete(tree.id)}
+                      onClick={() => handleDelete(tree)}
                       aria-label={`Delete ${tree.name}`}
                       className="focus-ring rounded-lg flex items-center justify-center w-8 h-8 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors duration-150"
                     >
@@ -252,6 +261,7 @@ function AllTreesTab() {
 }
 
 function TreeTypesTab() {
+  const confirmAction = useConfirm();
   const { categories, refresh: refreshReference } = useReferenceData();
   const [types, setTypes] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -316,12 +326,14 @@ function TreeTypesTab() {
   }
 
   async function handleDeleteType(type) {
-    if (
-      !window.confirm(
-        `Remove the "${type.name}" tree type? Existing trees of this type keep their data but it won't be offered for new or edited trees.`
-      )
-    )
-      return;
+    const confirmed = await confirmAction({
+      title: `Remove "${type.name}"?`,
+      message:
+        "Existing trees of this type keep their data but it won't be offered for new or edited trees.",
+      confirmLabel: "Remove",
+      danger: true,
+    });
+    if (!confirmed) return;
     await deleteTreeType(type.name);
     load();
   }
@@ -559,6 +571,7 @@ function SimpleListEditor({
   placeholder,
   onChange,
 }) {
+  const confirmAction = useConfirm();
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [newValue, setNewValue] = useState("");
@@ -612,7 +625,12 @@ function SimpleListEditor({
   }
 
   async function handleRemove(item) {
-    if (!window.confirm(`Remove "${itemLabel(item)}"?`)) return;
+    const confirmed = await confirmAction({
+      title: `Remove "${itemLabel(item)}"?`,
+      confirmLabel: "Remove",
+      danger: true,
+    });
+    if (!confirmed) return;
     try {
       await remove(item);
       refreshList();
@@ -722,6 +740,7 @@ function SimpleListEditor({
 }
 
 function HealthStatusEditor({ onChange }) {
+  const confirmAction = useConfirm();
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [label, setLabel] = useState("");
@@ -778,7 +797,12 @@ function HealthStatusEditor({ onChange }) {
   }
 
   async function handleRemove(item) {
-    if (!window.confirm(`Remove "${item.label}"?`)) return;
+    const confirmed = await confirmAction({
+      title: `Remove "${item.label}"?`,
+      confirmLabel: "Remove",
+      danger: true,
+    });
+    if (!confirmed) return;
     try {
       await deleteHealthStatus(item.value);
       refreshList();
@@ -902,12 +926,16 @@ function HealthStatusEditor({ onChange }) {
 }
 
 function UsersTab() {
+  const confirmAction = useConfirm();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editFirst, setEditFirst] = useState("");
   const [editLast, setEditLast] = useState("");
   const [showInvite, setShowInvite] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [error, setError] = useState("");
 
   function load() {
     const supabase = getSupabaseBrowserClient();
@@ -935,11 +963,15 @@ function UsersTab() {
   async function toggleRole(user) {
     const nextRole = user.role === "admin" ? "user" : "admin";
     const displayName = user.first_name || user.email;
-    const confirmed = window.confirm(
-      nextRole === "admin"
-        ? `Make ${displayName} an admin? They'll be able to see and manage every user's trees.`
-        : `Remove admin access from ${displayName}?`
-    );
+    const confirmed = await confirmAction({
+      title: nextRole === "admin" ? `Make ${displayName} an admin?` : `Remove admin access from ${displayName}?`,
+      message:
+        nextRole === "admin"
+          ? "They'll be able to see and manage every user's trees."
+          : undefined,
+      confirmLabel: nextRole === "admin" ? "Make admin" : "Remove admin",
+      danger: nextRole !== "admin",
+    });
     if (!confirmed) return;
     const supabase = getSupabaseBrowserClient();
     await supabase.from("profiles").update({ role: nextRole }).eq("id", user.id);
@@ -960,6 +992,35 @@ function UsersTab() {
       .eq("id", user.id);
     setEditingId(null);
     load();
+  }
+
+  async function handleDeleteUser(user) {
+    const displayName = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email;
+    const confirmed = await confirmAction({
+      title: `Delete ${displayName}?`,
+      message:
+        "This permanently deletes their account and every tree they've added. This can't be undone.",
+      confirmLabel: "Delete user",
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    setError("");
+    setDeletingId(user.id);
+    try {
+      const res = await fetch("/api/admin/delete-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Could not delete that user.");
+      load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   function RoleBadge({ user }) {
@@ -996,6 +1057,25 @@ function UsersTab() {
             user.can_add_tree ? "translate-x-6" : "translate-x-1"
           }`}
         />
+      </button>
+    );
+  }
+
+  function DeleteUserButton({ user }) {
+    if (user.id === currentUser?.id) return null;
+    return (
+      <button
+        type="button"
+        onClick={() => handleDeleteUser(user)}
+        disabled={deletingId === user.id}
+        aria-label={`Delete ${user.first_name || user.email}`}
+        className="focus-ring flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 transition-colors duration-150"
+      >
+        {deletingId === user.id ? (
+          <SpinnerIcon className="w-3.5 h-3.5" />
+        ) : (
+          <TrashIcon className="w-3.5 h-3.5" />
+        )}
       </button>
     );
   }
@@ -1078,6 +1158,8 @@ function UsersTab() {
         />
       )}
 
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+
       {!loaded ? (
         <p className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
           <SpinnerIcon className="w-4 h-4" /> Loading users...
@@ -1091,7 +1173,10 @@ function UsersTab() {
                 key={u.id}
                 className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 flex flex-col gap-2"
               >
-                <NameEditor user={u} />
+                <div className="flex items-start justify-between gap-2">
+                  <NameEditor user={u} />
+                  <DeleteUserButton user={u} />
+                </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">{u.email}</p>
                 <div className="flex items-center justify-between pt-1">
                   <RoleBadge user={u} />
@@ -1113,6 +1198,7 @@ function UsersTab() {
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Role</th>
                   <th className="px-4 py-3 font-medium">Can add tree</th>
+                  <th className="px-4 py-3 font-medium" />
                 </tr>
               </thead>
               <tbody>
@@ -1132,6 +1218,9 @@ function UsersTab() {
                     </td>
                     <td className="px-4 py-3">
                       <CanAddToggle user={u} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <DeleteUserButton user={u} />
                     </td>
                   </tr>
                 ))}

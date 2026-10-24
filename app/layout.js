@@ -3,8 +3,10 @@ import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import AddTreeModal from "@/components/AddTreeModal";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { AuthProvider } from "@/lib/auth/AuthProvider";
 import { AddTreeModalProvider } from "@/lib/ui/AddTreeModalContext";
+import { ConfirmDialogProvider } from "@/lib/ui/ConfirmDialogContext";
 import { ReferenceDataProvider } from "@/lib/reference/ReferenceDataProvider";
 
 const geistSans = Geist({
@@ -31,18 +33,6 @@ export const viewport = {
   themeColor: "#16a34a",
 };
 
-const THEME_INIT_SCRIPT = `
-(function () {
-  try {
-    var theme = localStorage.getItem("vagdo_theme");
-    if (!theme) {
-      theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    }
-    if (theme === "dark") document.documentElement.classList.add("dark");
-  } catch (e) {}
-})();
-`;
-
 const SW_REGISTER_SCRIPT = `
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
@@ -58,24 +48,20 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
-        />
-      </head>
       <body
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]"
       >
         <AuthProvider>
           <ReferenceDataProvider>
-            <AddTreeModalProvider>
-              <Navbar />
-              <div className="flex-1 flex flex-col">{children}</div>
-              <AddTreeModal />
-            </AddTreeModalProvider>
+            <ConfirmDialogProvider>
+              <AddTreeModalProvider>
+                <Navbar />
+                <div className="flex-1 flex flex-col">{children}</div>
+                <AddTreeModal />
+              </AddTreeModalProvider>
+              <ConfirmDialog />
+            </ConfirmDialogProvider>
           </ReferenceDataProvider>
         </AuthProvider>
         <Script

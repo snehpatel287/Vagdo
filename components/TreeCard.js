@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getCoverImage } from "@/lib/trees";
 import { useReferenceData } from "@/lib/reference/ReferenceDataProvider";
-import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   LeafIcon,
   MapPinIcon,
@@ -18,13 +17,12 @@ import {
 export default function TreeCard({ tree, onDelete }) {
   const router = useRouter();
   const { healthStatuses } = useReferenceData();
-  const { user } = useAuth();
   const [imgFailed, setImgFailed] = useState(false);
   const accent = tree.color || "#22c55e";
   const cover = !imgFailed && getCoverImage(tree);
   const photoCount = tree.images?.length || 0;
   const healthInfo = healthStatuses.find((h) => h.value === tree.health);
-  const showOwner = tree.owner_name && tree.user_id !== user?.id;
+  const showOwner = !!tree.owner_name;
 
   function goToDetail() {
     router.push(`/tree/${tree.id}`);

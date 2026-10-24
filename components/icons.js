@@ -281,3 +281,14 @@ export function LockIcon(props) {
     </Icon>
   );
 }
+
+export function AlertTriangleIcon(props) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3.5L2.5 20h19L12 3.5z" />
+      <path d="M12 9.5v4.5" />
+      <circle cx="12" cy="17" r="0.75" fill="currentColor" stroke="none" />
+    </Icon>
+  );
+}
+
