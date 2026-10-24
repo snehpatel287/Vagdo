@@ -1,4 +1,4 @@
-const CACHE_NAME = "vagdo-cache-v1";
+const CACHE_NAME = "vagdo-cache-v2";
 const CORE_ASSETS = ["/", "/manifest.json", "/icon.svg"];
 
 self.addEventListener("install", (event) => {
