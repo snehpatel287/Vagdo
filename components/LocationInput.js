@@ -101,7 +101,17 @@ export default function LocationInput({ value, onChange }) {
         }
       },
       (err) => {
-        setError(err.message || "Could not get your location.");
+        if (err.code === err.PERMISSION_DENIED) {
+          setError(
+            "Location access is blocked. Allow it for this site in your browser's settings, then try again."
+          );
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          setError("Your location couldn't be determined. Try again or search for the address instead.");
+        } else if (err.code === err.TIMEOUT) {
+          setError("Getting your location took too long. Try again.");
+        } else {
+          setError("Could not get your location.");
+        }
         setLocating(false);
       },
       { enableHighAccuracy: true }

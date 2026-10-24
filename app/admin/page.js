@@ -950,6 +950,7 @@ function UsersTab() {
   const [accessBusyId, setAccessBusyId] = useState(null);
   const [resetBusyId, setResetBusyId] = useState(null);
   const [resetSentId, setResetSentId] = useState(null);
+  const [deleteBusyId, setDeleteBusyId] = useState(null);
   const [error, setError] = useState("");
 
   function load() {
@@ -1051,6 +1052,35 @@ function UsersTab() {
     }
   }
 
+  async function handleDeleteUser(user) {
+    const displayName = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email;
+    const confirmed = await confirmAction({
+      title: `Delete ${displayName}?`,
+      message:
+        "Their login and profile are permanently deleted — this can't be undone. Every tree they've added stays in the database, just without an owner shown.",
+      confirmLabel: "Delete user",
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    setError("");
+    setDeleteBusyId(user.id);
+    try {
+      const res = await fetch("/api/admin/delete-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Could not delete this user.");
+      load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleteBusyId(null);
+    }
+  }
+
   function RoleBadge({ user }) {
     return (
       <button
@@ -1121,6 +1151,20 @@ function UsersTab() {
             <UnlockIcon className="w-3.5 h-3.5" />
           ) : (
             <LockIcon className="w-3.5 h-3.5" />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => handleDeleteUser(user)}
+          disabled={deleteBusyId === user.id}
+          aria-label={`Delete ${user.first_name || user.email}`}
+          title="Delete user (keeps their trees)"
+          className="focus-ring flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 transition-colors duration-150"
+        >
+          {deleteBusyId === user.id ? (
+            <SpinnerIcon className="w-3.5 h-3.5" />
+          ) : (
+            <TrashIcon className="w-3.5 h-3.5" />
           )}
         </button>
       </div>

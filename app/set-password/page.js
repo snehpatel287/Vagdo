@@ -1,30 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browserClient";
-import { CheckCircleIcon, LeafIcon, SpinnerIcon } from "@/components/icons";
+import { AlertTriangleIcon, CheckCircleIcon, LeafIcon, SpinnerIcon } from "@/components/icons";
 
 export default function SetPasswordPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [linkError, setLinkError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
 
   // Supabase's invite link lands here as `#access_token=...&refresh_token=...`
   // (a hash fragment) rather than `?code=...` — fragments never reach the
   // server, so /auth/callback can't see them. Pick them up here instead,
-  // client-side, and turn them into a real session.
+  // client-side, and turn them into a real session. An already-used or
+  // expired link instead lands here as `#error=...&error_code=otp_expired`.
   useEffect(() => {
     const hash = window.location.hash;
-    if (!hash || !hash.includes("access_token")) {
+    if (!hash) {
       setSessionReady(true);
       return;
     }
 
     const params = new URLSearchParams(hash.slice(1));
+
+    if (params.get("error")) {
+      setLinkError(
+        params.get("error_code") === "otp_expired"
+          ? "This invite/reset link has already been used or has expired. Ask an admin to send a new one."
+          : params.get("error_description")?.replaceAll("+", " ") ||
+              "This link is invalid. Ask an admin to send a new one."
+      );
+      window.history.replaceState(null, "", window.location.pathname);
+      setSessionReady(true);
+      return;
+    }
+
     const access_token = params.get("access_token");
     const refresh_token = params.get("refresh_token");
 
@@ -36,7 +52,7 @@ export default function SetPasswordPage() {
     const supabase = getSupabaseBrowserClient();
     supabase.auth.setSession({ access_token, refresh_token }).then(({ error: sessionError }) => {
       if (sessionError) {
-        setError(sessionError.message || "This invite link has expired. Ask an admin to resend it.");
+        setLinkError(sessionError.message || "This invite link has expired. Ask an admin to resend it.");
       }
       window.history.replaceState(null, "", window.location.pathname);
       setSessionReady(true);
@@ -85,6 +101,20 @@ export default function SetPasswordPage() {
           </p>
         </div>
 
+        {linkError ? (
+          <div className="flex flex-col items-center text-center gap-3">
+            <span className="flex items-center justify-center w-10 h-10 rounded-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400">
+              <AlertTriangleIcon className="w-5 h-5" />
+            </span>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{linkError}</p>
+            <Link
+              href="/login"
+              className="focus-ring w-full flex items-center justify-center min-h-[44px] rounded-xl font-semibold text-white bg-green-600 hover:bg-green-700 active:bg-green-800 transition-colors duration-150"
+            >
+              Go to sign in
+            </Link>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label
@@ -139,6 +169,7 @@ export default function SetPasswordPage() {
             {loading ? "Saving..." : !sessionReady ? "Verifying invite..." : "Set password & continue"}
           </button>
         </form>
+        )}
       </div>
     </main>
   );
