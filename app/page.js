@@ -182,7 +182,7 @@ export default function Home() {
         <button
           type="button"
           onClick={openModal}
-          className="focus-ring sm:hidden flex items-center gap-1.5 min-h-[44px] bg-green-600 text-white px-4 rounded-xl text-sm font-semibold shadow-sm shadow-green-600/20 transition-colors duration-150 shrink-0"
+          className="focus-ring flex items-center gap-1.5 min-h-[44px] bg-green-600 hover:bg-green-700 active:bg-green-800 text-white px-4 rounded-xl text-sm font-semibold shadow-sm shadow-green-600/20 transition-colors duration-150 shrink-0"
         >
           <PlusIcon className="w-4 h-4" strokeWidth={2} />
           Add
